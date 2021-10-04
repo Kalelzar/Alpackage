@@ -29,10 +29,10 @@ retest: build
 	@ctest -j 4 --rerun-failed --test-dir build/ninja -C Release
 
 run: build
-	@rlwrap ./build/ninja/Release/${PROJECT_NAME}_main
+	@./build/ninja/Release/${PROJECT_NAME}_main
 
 debug: debugBuild
-	@valgrind -s ./build/ninja/Debug/$(PROJECT_NAME)_main
+	@valgrind -s --leak-check=full ./build/ninja/Debug/$(PROJECT_NAME)_main
 
 bench: build
 	@./build/ninja/bench/Release/$(PROJECT_NAME)_bench

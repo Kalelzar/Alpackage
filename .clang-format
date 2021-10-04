@@ -61,7 +61,7 @@ FixNamespaceComments: true
 IncludeBlocks: Regroup
 
 IncludeCategories:
-  - Regex:            '^"ThisFunc/'
+  - Regex:            '^"Alpackage/'
     Priority:        0
   - Regex:            '^"Kal/'
     Priority:        0
@@ -75,7 +75,7 @@ IncludeCategories:
   - Regex:           '<[[:alnum:].]+>'
     Priority:        5
 
-IncludeIsMainRegex: "^(ThisFunc/)?"
+IncludeIsMainRegex: "^(Alpackage/)?"
 
 #IndentAccessModifiers: false
 IndentCaseBlocks: false
