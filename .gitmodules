@@ -1,0 +1,3 @@
+[submodule "reckless"]
+	path = lib/reckless
+	url = https://github.com/mattiasflodin/reckless.git
