@@ -11,7 +11,5 @@ concept TriviallyConstructible = requires ( ) {
 
 template<typename T, typename... U>
 concept ConstructibleFrom = requires (U... u) {
-  {
-    T { u... }
-    } -> Same<T>;
+  { T (u...) } -> Same<T>;
 };

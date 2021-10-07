@@ -1,7 +1,11 @@
 #pragma once
 
 #include <Alpackage/Package.hpp>
+
+#include <Kal/Concepts/TypeConversion.hpp>
+
 #include <Kal/default.hpp>
+
 #include <boost/config.hpp>
 #include <sstream>
 #include <string>
@@ -29,8 +33,12 @@ template<typename T> class ModuleErrorOr {
   template<typename U> U to ( ) const requires Same<T, U> { return value; }
 
   template<typename U>
-    requires Convertible<T, U> U to ( )
+    requires CanConvertTo<T, U> U to ( )
   const { return value.template to<U> ( ); }
+
+  template<typename U>
+    requires ConstructibleFrom<T, U> U to ( )
+  const { return U (value); }
 
   constexpr ModuleErrorOr (T const& t) : value (t) { }
   constexpr ModuleErrorOr (T&& t) : value (std::move (t)) { }
