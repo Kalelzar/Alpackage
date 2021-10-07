@@ -61,19 +61,25 @@ FixNamespaceComments: true
 IncludeBlocks: Regroup
 
 IncludeCategories:
-  - Regex:            '^"Alpackage/'
+  - Regex:            '^("|<)Alpackage/'
     Priority:        0
-  - Regex:            '^"Kal/'
-    Priority:        0
-  - Regex:           '.*'
+  - Regex:            '^("|<)Kal/Concepts/'
+    Priority:        1
+  - Regex:            '^("|<)Kal/'
     Priority:        2
-  - Regex:           '^"(llvm|llvm-c|clang|clang-c)/'
+  - Regex:           '^("|<)(llvm|llvm-c|clang|clang-c)/'
     Priority:        3
     CaseSensitive:   true
-  - Regex:           '^(<|"(gtest|gmock|rapidcheck|hayai)/)'
+  - Regex:           '^(<|")(gtest|gmock|hayai)/'
     Priority:        4
-  - Regex:           '<[[:alnum:].]+>'
+  - Regex:           '^(<|"(rapidcheck)/)'
     Priority:        5
+  - Regex:           '^<[[:alnum:]]+/'
+    Priority:        6
+  - Regex:           '^<[[:alnum:]]+'
+    Priority:        7
+  - Regex:           '.*'
+    Priority:        8
 
 IncludeIsMainRegex: "^(Alpackage/)?"
 
