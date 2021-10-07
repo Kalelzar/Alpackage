@@ -1,6 +1,7 @@
 #include <Alpackage/Module/Module.hpp>
 #include <Alpackage/Module/ModuleLoader.hpp>
 #include <Alpackage/Util/Logging.hpp>
+
 #include <boost/dll/import.hpp>
 
 namespace Alpackage::Module {

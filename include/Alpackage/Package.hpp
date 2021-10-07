@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Kal/default.hpp>
+
 #include <forward_list>
 #include <ostream>
 #include <set>

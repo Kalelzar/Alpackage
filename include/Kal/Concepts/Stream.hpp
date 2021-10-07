@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Kal/Concepts/Type.hpp>
+
 #include <iostream>
 
 template<typename T>

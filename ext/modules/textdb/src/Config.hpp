@@ -4,6 +4,7 @@
 #include <Alpackage/Package.hpp>
 #include <Alpackage/Util/EntryReader.hpp>
 #include <Alpackage/Util/Logging.hpp>
+
 #include <cstring>
 #include <fstream>
 #include <istream>

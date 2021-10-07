@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Kal/Concepts/Type.hpp>
+
 #include <Kal/default.hpp>
 
 template<typename T, typename U = T>

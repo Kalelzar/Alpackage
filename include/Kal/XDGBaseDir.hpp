@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Alpackage/Util/Logging.hpp>
+
 #include <Kal/Concepts/Applicators.hpp>
+
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>

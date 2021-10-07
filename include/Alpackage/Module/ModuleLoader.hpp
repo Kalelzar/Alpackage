@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Alpackage/Module/Module.hpp>
+
 #include <boost/dll/import.hpp>
 
 namespace Alpackage::Module {

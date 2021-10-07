@@ -1,8 +1,10 @@
-#include "../src/Config.hpp"
 #include <gtest/gtest.h>
+
 #include <rapidcheck/Assertions.h>
 #include <rapidcheck/gtest.h>
 #include <sstream>
+
+#include "../src/Config.hpp"
 
 TEST (TextDBConfig, Parse) {
   std::stringstream s;

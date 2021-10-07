@@ -2,6 +2,7 @@
 
 #include <Kal/Concepts/Primitive.hpp>
 #include <Kal/Concepts/Type.hpp>
+
 #include <cstddef>
 
 template<typename T, typename Arg>

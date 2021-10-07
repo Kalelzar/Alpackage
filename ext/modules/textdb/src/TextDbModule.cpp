@@ -1,12 +1,15 @@
-#include "Config.hpp"
 #include <Alpackage/Module/Module.hpp>
 #include <Alpackage/Package.hpp>
 #include <Alpackage/Util/Logging.hpp>
+
 #include <Kal/XDGBaseDir.hpp>
+
 #include <boost/config.hpp>
 #include <iostream>
 #include <stdexcept>
 #include <string>
+
+#include "Config.hpp"
 
 namespace Alpackage::Module {
 
