@@ -19,7 +19,7 @@ ModulePtr ModuleLoader::load (std::string const&          moduleName,
 
   boost::shared_ptr<Alpackage::Module::IAlpackageModule> module;
 
-  module = boost::dll::import<Alpackage::Module::IAlpackageModule> (
+  module = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
 
     prefix / moduleName,
     "module",
