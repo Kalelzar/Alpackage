@@ -58,6 +58,11 @@ concept Predicate = requires (T predicate, TestType t) {
   { predicate (t) } -> Same<bool>;
 };
 
+template<typename T, typename TestType1, typename TestType2>
+concept Bipredicate = requires (T predicate, TestType1 t1, TestType2 t2) {
+  { predicate (t1, t2) } -> Same<bool>;
+};
+
 template<typename T, typename TestType>
 concept Consumer = requires (T consumer, TestType t) {
   { consumer (t) } -> Same<void>;
@@ -66,4 +71,9 @@ concept Consumer = requires (T consumer, TestType t) {
 template<typename T, typename Aggregate>
 concept Aggregator = requires (T aggregator, Aggregate a, Aggregate b) {
   { aggregator (a, b) } -> Same<Aggregate>;
+};
+
+template<typename T, typename U, typename Aggregate>
+concept Bimap = requires (T aggregator, U a, Aggregate b) {
+  { aggregator (a, b) } -> Same<U>;
 };

@@ -24,6 +24,14 @@ template<typename T> using RemoveVolatile = typename __RemoveVolatile<T>::Type;
 
 template<class T> using RemoveCV          = RemoveVolatile<RemoveConst<T>>;
 
+template<typename T> struct __IsPointer : std::false_type { };
+template<typename T> struct __IsPointer<T*> : std::true_type { };
+
+template<typename T> struct _IsPointer : __IsPointer<RemoveCV<T>> { };
+
+template<class T> inline constexpr bool IsPointer = _IsPointer<T>::value;
+
+
 template<typename T> struct __MakeUnsigned { using Type = void; };
 template<> struct __MakeUnsigned<signed char> { using Type = unsigned char; };
 template<> struct __MakeUnsigned<short> { using Type = unsigned short; };
@@ -67,27 +75,95 @@ template<typename T> using MakeSigned = typename __MakeSigned<T>::Type;
 template<typename T, typename U> inline constexpr bool IsSame       = false;
 template<typename T> inline constexpr bool             IsSame<T, T> = true;
 
+/// @defgroup TypeConcepts Type Concepts
+
+/** @defgroup Same Same
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of type equality.
+ *
+ * @tparam T left
+ * @tparam U right
+ *
+ * Only true when \c T and \c U are the \e EXACT same type
+ *
+ */
 template<typename T, typename U>
 concept Same = IsSame<T, U>;
 
-template<typename T>
-concept Const = IsSame<T, AddConst<T>>;
 
+/** @defgroup Const Const
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encode s the concept of a constant type.
+ *
+ * @tparam T type
+ *
+ * @requires{T, Same} : \c T is the same as @ref AddConst <T>
+ *
+ * Only true when \c T is a constant type
+ *
+ * @see NotConst
+ */
 template<typename T>
-concept NotConst = IsSame<RemoveConst<T>, T>;
+concept Const = Same<T, AddConst<T>>;
 
+/** @defgroup NotConst Not Const
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a mutable type.
+ *
+ * @tparam T type
+ *
+ * @requires{T, Same} : \c T is the same as @ref RemoveConst <T>
+ *
+ * Only true when \c T is a non-const type.
+ *
+ * @see Const
+ *
+ */
+template<typename T>
+concept NotConst = Same<RemoveConst<T>, T>;
+
+/** @defgroup Pointer Pointer
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a pointer type.
+ *
+ * @tparam T type
+ *
+ * Only true when \c T is a pointer type.
+ *
+ */
+template<typename T>
+concept Pointer = IsPointer<T>;
+
+/** @defgroup Nullable Nullable
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a nullable type.
+ *
+ * @tparam T type
+ *
+ * Only true when \c T is such that \code{T t = nullptr} is valid.
+ *
+ */
 template<typename T>
 concept Nullable = requires (T t) {
   t = nullptr;
 };
 
+/** @defgroup NotNull Not Null
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a non-nullable type.
+ *
+ * @tparam T type
+ *
+ * @requires<T, Nullable>
+ *
+ * Only true when @ref Nullable <T> is false
+ *
+ */
 template<typename T>
 concept NotNull = !Nullable<T>;
-
-template<typename T, typename U>
-concept Convertible = requires (T t) {
-  { t.template to<U> ( ) } -> Same<U>;
-};
-
-template<typename T, typename U>
-concept Interchangeable = Convertible<T, U> && Convertible<U, T>;
