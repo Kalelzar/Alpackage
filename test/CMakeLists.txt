@@ -8,7 +8,13 @@ file(GLOB_RECURSE TEST_SRC CONFIGURE_DEPENDS
         "*.cpp"
         )
 
+set(RC_ENABLE_GTEST ON CACHE BOOL "Rapidcheck GTest Support" FORCE)
+set(RC_ENABLE_GMOCK ON CACHE BOOL "Rapidcheck GMock Support" FORCE)
+set(RC_ENABLE_BOOST ON CACHE BOOL "Rapidcheck Boost Support" FORCE)
+set(RC_ENABLE_RTTI  ON CACHE BOOL "Rapidcheck RTTI Support"  FORCE)
+
 add_executable(Alpackage_test ${TEST_SRC})
-target_link_libraries(Alpackage_test PUBLIC rapidcheck gtest gtest_main Alpackage dl)
+
+target_link_libraries(Alpackage_test PUBLIC $<$<CONFIG:ASAN>:asan> rapidcheck gtest gtest_main Alpackage dl)
 
 gtest_discover_tests(Alpackage_test)

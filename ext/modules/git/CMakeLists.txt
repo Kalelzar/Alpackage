@@ -29,6 +29,6 @@ target_link_libraries(AlpackageGit PUBLIC Alpackage ${Boost_LIBRARIES} dl)
 target_include_directories(AlpackageGit PUBLIC ${Boost_INCLUDE_DIRS})
 
 add_executable(AlpackageGit_test ${TEST_SRC})
-target_link_libraries(AlpackageGit_test PUBLIC rapidcheck gtest gtest_main AlpackageGit Alpackage dl)
+target_link_libraries(AlpackageGit_test PUBLIC $<$<CONFIG:ASAN>:asan> rapidcheck gtest gtest_main AlpackageGit Alpackage dl)
 
 gtest_discover_tests(AlpackageGit_test)
