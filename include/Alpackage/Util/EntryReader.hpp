@@ -19,28 +19,32 @@
 template<IStreamable Entry, WithDefaultValue Container = std::vector<Entry>>
   requires WithDefaultValue<Entry>
 class EntryReader {
+  private:
+  static void error ( ) {
+#ifdef __GNUC__
+    const std::type_info& ti = typeid (Entry);
+    int                   status;
+    char* realname = abi::__cxa_demangle (ti.name ( ), 0, 0, &status);
+    Log::error ("Failed to read entry of type: %s", realname);
+    Log::flush ( );
+    free (realname);
+#else
+    Log::error ("Failed to read entry of type: %s", typeid (Entry).name ( ));
+#endif
+
+    throw std::runtime_error ("Failed to read entry.");
+  }
+
   public:
   static Container parse (std::istream* in) {
     auto res = defaultValue<Container>;
 
-    while (!in->eof ( )) {
+    while (!in->eof ( ) && in->peek ( ) != std::char_traits<char>::eof ( )) {
       Entry e = defaultValue<Entry>;
-      *in >> e;
-      if (in->fail ( )) {
-#ifdef __GNUC__
-        const std::type_info& ti = typeid (Entry);
-        int                   status;
-        char* realname = abi::__cxa_demangle (ti.name ( ), 0, 0, &status);
-        Log::error ("Failed to read entry of type: %s", realname);
-        Log::flush ( );
-        free (realname);
-#else
-        Log::error ("Failed to read entry of type: %s",
-                    typeid (Entry).name ( ));
-#endif
-
-        throw std::runtime_error ("Failed to read entry.");
-      }
+      try {
+        *in >> e;
+      } catch (std::runtime_error) { error ( ); }
+      if (in->fail ( )) { error ( ); }
       res.push_back (e);
     }
 
