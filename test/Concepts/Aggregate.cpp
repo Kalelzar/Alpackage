@@ -1,4 +1,4 @@
-#include <Kal/Concepts/Applicators.hpp>
+#include <Kal/Concepts/detail/aggregate.hpp>
 
 #include <gtest/gtest.h>
 
@@ -23,6 +23,17 @@ RC_GTEST_PROP (AggregateConcepts,
 
   int acc = 0;
   for (int i = 0; i < 256; i++) { acc += list[i]; }
+
+  RC_ASSERT (res == acc);
+}
+
+RC_GTEST_PROP (AggregateConcepts,
+               foldLeftIterable,
+               (int def, std::vector<int> list)) {
+  auto res = foldLeft (def, list, [] (int a, int b) { return a + b; });
+
+  int  acc = def;
+  for (int i : list) { acc += i; }
 
   RC_ASSERT (res == acc);
 }
