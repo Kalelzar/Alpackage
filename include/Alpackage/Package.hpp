@@ -27,11 +27,15 @@ class Package {
 
   Package ( )      = delete;
 
-  bool          operator== (Package const& other) const;
+  bool                 operator== (Package const& other) const;
 
-  bool          operator< (Package const& other) const;
+  bool                 operator< (Package const& other) const;
 
-  std::ostream& operator<< (std::ostream& out) const;
+  friend std::ostream& operator<< (std::ostream& out, Package const& p) {
+    out << "{ \"name\": \"" << p.name << "\", \"packageManager\": \"" << p.pm
+        << "\" }";
+    return out;
+  }
 };
 
 }     // namespace Alpackage

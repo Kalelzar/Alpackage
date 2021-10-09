@@ -16,8 +16,6 @@
 
 int main (int argc, char** argv) {
   try {
-    std::cout << to<int> (Alpackage::Module::ModuleErrorOr<int> (5));
-
   } catch (std::runtime_error& e) {
     std::cerr << "Encountered unrecoverable error: " << e.what ( ) << std::endl
               << "See logs for more details" << std::endl;

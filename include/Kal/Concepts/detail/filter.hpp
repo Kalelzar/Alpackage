@@ -11,13 +11,13 @@
 
 template<typename T, template<typename> class C>
   requires Iterable<C<T>> && Appendable<C, T> C<T>
-    filter (const C<T> collection, Predicate<T> auto predicate) {
+    filter (const C<T>& collection, Predicate<T> auto predicate) {
     C<T> newCollection = defaultValue<C<T>>;
     for (const T& it : collection) {
       if (predicate (it)) newCollection.push_back (it);
     }
 
-    return newCollection;
+    return std::move (newCollection);
   }
 
 template<typename T, template<typename> class C>

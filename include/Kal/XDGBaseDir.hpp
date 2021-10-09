@@ -221,25 +221,25 @@ std::vector<std::string> XDG_CONFIG_DIRS ( ) {
   return result;
 }
 
-// TODO: A good target for an optional return type.
-Option<std::string> findFirstFile (std::vector<std::string> paths,
-                                   std::string              relativeFile) {
+
+inline Option<std::string> findFileAt (std::string root,
+                                       std::string relativeFile) {
+  std::filesystem::path path (root);
+  std::filesystem::path file = path / relativeFile;
+  if (std::filesystem::exists (file)) { return file.string ( ); }
+  Log::error ("Could not find the file '%s' in '%s'", relativeFile, root);
+  return { };
+}
+
+inline Option<std::string> findFirstFile (std::vector<std::string> paths,
+                                          std::string relativeFile) {
   for (auto p : paths) {
-    std::filesystem::path path (p);
-    std::filesystem::path file = path / relativeFile;
-    if (std::filesystem::exists (file)) { return file.string ( ); }
+    auto path = findFileAt (p, relativeFile);
+    if (path) { return path; }
   }
   Log::error (
     "Could not find the file '%s' in any of the following directories: %s",
     relativeFile,
     mkString (paths, " : "));
-  return { };
-}
-
-Option<std::string> findFileAt (std::string root, std::string relativeFile) {
-  std::filesystem::path path (root);
-  std::filesystem::path file = path / relativeFile;
-  if (std::filesystem::exists (file)) { return file.string ( ); }
-  Log::error ("Could not find the file '%s' in '%s'", relativeFile, root);
   return { };
 }

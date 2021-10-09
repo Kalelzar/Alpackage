@@ -1,13 +1,16 @@
 #pragma once
 
 #include <Alpackage/Package.hpp>
+#include <Alpackage/Util/Logging.hpp>
 
 #include <Kal/Concepts/TypeConversion.hpp>
 
+#include <Kal/Option.hpp>
 #include <Kal/default.hpp>
 
 #include <boost/config.hpp>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 namespace Alpackage::Module {
@@ -48,12 +51,24 @@ template<typename T> class ModuleErrorOr {
           : error (e)
           , value (defaultValue<T>) { }
 
-      const T get ( ) const {
-        // FIXME: Throw exception on access of an error
+      const T getValue ( ) const {
+        if (isError ( )) {
+          Log::error ("Accessing an empty value in ModuleErrorOr");
+          throw std::runtime_error (
+            "Accessing an empty value in ModuleErrorOr");
+        }
+        return value;
+      }
+
+      const Option<T> get ( ) const {
+        if (isError ( )) {
+          Log::warn ("Accessing an empty value in ModuleErrorOr");
+          return { };
+        }
         return value;
       }
       const ModuleError getError ( ) const { return error; }
-      bool              isError ( ) { return error != ModuleError::NONE; }
+      bool              isError ( ) const { return error != ModuleError::NONE; }
 };
 
 class BOOST_SYMBOL_VISIBLE IAlpackageModule {

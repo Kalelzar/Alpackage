@@ -8,7 +8,9 @@ set(CMAKE_CONFIGURATION_TYPES "Release;ASAN;RelWithDebInfo;Debug" CACHE STRING "
 include(CTest)
 include(GoogleTest)
 
-
+set (BOOST_ROOT "${CMAKE_SOURCE_DIR}/lib/boost")
+set (BOOST_INCLUDEDIR "${CMAKE_SOURCE_DIR}/lib/boost/")
+set (BOOST_LIBRARYDIR "${CMAKE_SOURCE_DIR}/lib/boost/stage/lib")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)

@@ -6,6 +6,8 @@
 
 #include <Kal/default.hpp>
 
+#include <utility>
+
 template<typename U, typename T, template<typename> class C>
   requires Mappable<C, T, U> C<U> map (const C<T>             collection,
                                        Transformer<T, U> auto transformer) {
@@ -14,13 +16,13 @@ template<typename U, typename T, template<typename> class C>
 
 template<typename U, typename T, template<typename> class C>
   requires Iterable<C<T>> && Appendable<C, U> C<U>
-    map (const C<T> collection, Transformer<T, U> auto transformer) {
+    map (const C<T>& collection, Transformer<T, U> auto transformer) {
     C<U> newCollection = defaultValue<C<U>>;
     for (const T& it : collection) {
       newCollection.push_back (transformer (it));
     }
 
-    return newCollection;
+    return std::move (newCollection);
   }
 
 template<typename U, typename T, template<typename> class C>

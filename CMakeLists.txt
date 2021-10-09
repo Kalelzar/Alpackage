@@ -7,6 +7,9 @@ set(CMAKE_CONFIGURATION_TYPES "Release;ASAN;Debug" CACHE STRING "Build type sele
 
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+include(CodeCoverage)
+append_coverage_compiler_flags(-fPIC -O0 --coverage -fkeep-inline-functions -fkeep-static-functions)
+
 include(CTest)
 
 # Libs
@@ -14,6 +17,7 @@ include(CTest)
 set (BOOST_ROOT "lib/boost")
 
 add_compile_options(-fPIC $<$<CONFIG:ASAN>:-fsanitize=address> -fconcepts-diagnostics-depth=2  $<$<CONFIG:ASAN>:-lasan>)
+
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
@@ -24,7 +28,7 @@ add_subdirectory(src)
 add_subdirectory(ext)
 
 add_executable(Alpackage_main exec/main.cpp)
-target_link_libraries(Alpackage_main PUBLIC $<$<CONFIG:ASAN>:asan> Alpackage dl)
+target_link_libraries(Alpackage_main PUBLIC $<$<CONFIG:ASAN>:asan> -lprofiler -ltcmalloc Alpackage dl)
 #target_link_libraries(Alpackage_main PUBLIC reckless pthread)
 
 add_subdirectory(test)

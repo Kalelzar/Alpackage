@@ -25,7 +25,7 @@
 template<Iterable C,
          typename T  = typename IteratesWith<C>::type,
          typename T2 = RemoveConst<RemoveRef<T>>>
-  requires WithDefaultValue<T2> T2 aggregate (const C             collection,
+  requires WithDefaultValue<T2> T2 aggregate (const C&            collection,
                                               Aggregator<T2> auto aggregator) {
     T2 total = defaultValue<T2>;
     for (const T2& it : collection) { total = aggregator (total, it); }

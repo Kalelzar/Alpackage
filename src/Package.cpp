@@ -18,13 +18,4 @@ bool Package::operator== (Package const& other) const {
 bool Package::operator< (Package const& other) const {
   return name < other.name;
 }
-
-
-std::ostream& Package::operator<< (std::ostream& out) const {
-  out << "{ \"name\": \"" << name << "\", \"packageManager\": \"" << pm
-      << "\" }";
-  return out;
-}
-
-
 }     // namespace Alpackage

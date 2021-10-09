@@ -13,7 +13,7 @@ docs:
 	@doxygen doxygen
 
 format:
-	@find . -iregex ".*pp" | grep -v -E'./build|./lib' | xargs clang-format -style file -i
+	@find . -iregex ".*pp" | grep -v -E './build|./lib' | xargs clang-format -style file -i
 
 # Release
 
@@ -24,6 +24,9 @@ run: build
 	@./build/ninja/Release/${PROJECT_NAME}_main
 
 test: build
+	@ctest -j 4 --test-dir build/ninja/test -C Release
+
+testAll: build
 	@ctest -j 4 --test-dir build/ninja -C Release
 
 retest: build
