@@ -5,6 +5,8 @@ project(Alpackage VERSION 0.0.1)
 
 set(CMAKE_CONFIGURATION_TYPES "Release;ASAN;Debug" CACHE STRING "Build type selections" FORCE)
 
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 include(CTest)
 
 # Libs
