@@ -4,6 +4,8 @@
 
 #include <Kal/Concepts/Applicators.hpp>
 
+#include <Kal/Option.hpp>
+
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
@@ -220,8 +222,8 @@ std::vector<std::string> XDG_CONFIG_DIRS ( ) {
 }
 
 // TODO: A good target for an optional return type.
-std::string findFirstFile (std::vector<std::string> paths,
-                           std::string              relativeFile) {
+Option<std::string> findFirstFile (std::vector<std::string> paths,
+                                   std::string              relativeFile) {
   for (auto p : paths) {
     std::filesystem::path path (p);
     std::filesystem::path file = path / relativeFile;
@@ -231,13 +233,13 @@ std::string findFirstFile (std::vector<std::string> paths,
     "Could not find the file '%s' in any of the following directories: %s",
     relativeFile,
     mkString (paths, " : "));
-  throw std::runtime_error ("Could not find the required file.");
+  return { };
 }
 
-std::string findFileAt (std::string root, std::string relativeFile) {
+Option<std::string> findFileAt (std::string root, std::string relativeFile) {
   std::filesystem::path path (root);
   std::filesystem::path file = path / relativeFile;
   if (std::filesystem::exists (file)) { return file.string ( ); }
   Log::error ("Could not find the file '%s' in '%s'", relativeFile, root);
-  throw std::runtime_error ("Could not find the required file.");
+  return { };
 }

@@ -45,13 +45,24 @@ template<typename U, typename T, template<typename> class C>
     return newCollection;
   }
 
+  template<typename U, typename T>
+    requires IndexableT<T*>
+  void map (SizeT                  size,
+            const T*               collection,
+            U*                     newCollection,
+            Transformer<T, U> auto transformer) {
+    for (SizeT i = 0; i < size; i++) {
+      newCollection[i] = transformer (collection[i]);
+    }
+  }
+
   template<typename U, typename T, template<typename> class C>
     requires Iterable<C<T>> && Reversible<C<U>> && Prependable<C, U> &&(
       !Appendable<C, U>) C<U> map (const C<T>             collection,
                                    Transformer<T, U> auto transformer) {
       C<U> newCollection = defaultValue<C<U>>;
       for (const T& it : collection) {
-        newCollection.push_front (transform (it));
+        newCollection.push_front (transformer (it));
       }
 
       newCollection.reverse ( );
