@@ -11,6 +11,8 @@ include(CTest)
 
 # Libs
 
+set (BOOST_ROOT "lib/boost")
+
 add_compile_options(-fPIC $<$<CONFIG:ASAN>:-fsanitize=address> -fconcepts-diagnostics-depth=2  $<$<CONFIG:ASAN>:-lasan>)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)

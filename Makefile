@@ -13,7 +13,7 @@ docs:
 	@doxygen doxygen
 
 format:
-	@find . -iregex ".*pp" | grep -v './build' | xargs clang-format -style file -i
+	@find . -iregex ".*pp" | grep -v -E'./build|./lib' | xargs clang-format -style file -i
 
 # Release
 
