@@ -1,0 +1,5 @@
+#/bin/bash
+
+
+
+eval "$(cat Makefile | grep -E "^[a-zA-Z]+:" | cut -d: -f1 | xargs --replace=# echo "alias #='make #'")"
