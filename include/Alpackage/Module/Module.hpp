@@ -33,25 +33,27 @@ template<typename T> class ModuleErrorOr {
   template<typename U> U to ( ) const requires Same<T, U> { return value; }
 
   template<typename U>
-    requires CanConvertTo<T, U> U to ( )
-  const { return value.template to<U> ( ); }
+    requires CanConvertTo<T, U> &&(!Same<T, U>) U to ( ) const {
+      return value.template to<U> ( );
+    }
 
-  template<typename U>
-    requires ConstructibleFrom<T, U> U to ( )
-  const { return U (value); }
+    template<typename U>
+      requires ConstructibleFrom<U, T> &&(!Same<T, U>) U to ( ) const {
+        return U (value);
+      }
 
-  constexpr ModuleErrorOr (T const& t) : value (t) { }
-  constexpr ModuleErrorOr (T&& t) : value (std::move (t)) { }
-  constexpr ModuleErrorOr (ModuleError e)
-      : error (e)
-      , value (defaultValue<T>) { }
+      constexpr ModuleErrorOr (T const& t) : value (t) { }
+      constexpr ModuleErrorOr (T&& t) : value (std::move (t)) { }
+      constexpr ModuleErrorOr (ModuleError e)
+          : error (e)
+          , value (defaultValue<T>) { }
 
-  const T get ( ) const {
-    // FIXME: Throw exception on access of an error
-    return value;
-  }
-  const ModuleError getError ( ) const { return error; }
-  bool              isError ( ) { return error != ModuleError::NONE; }
+      const T get ( ) const {
+        // FIXME: Throw exception on access of an error
+        return value;
+      }
+      const ModuleError getError ( ) const { return error; }
+      bool              isError ( ) { return error != ModuleError::NONE; }
 };
 
 class BOOST_SYMBOL_VISIBLE IAlpackageModule {
