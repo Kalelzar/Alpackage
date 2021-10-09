@@ -11,7 +11,6 @@ concept Convertible = requires (T t) {
   { to<U> (t) } -> Same<U>;
 };
 
-
 template<typename T, typename U>
 concept CanConvertTo = requires (T t) {
   { t.template to<U> ( ) } -> Same<U>;
@@ -32,13 +31,13 @@ template<typename T> struct Convert<T, T> {
   static T to (T t) { return t; }
 };
 
-template<typename U, typename T>
-  requires (!Convertible<T, U>)
-struct Convert<T, U> {
-  static U to (T t) {
-    static_assert (Convertible<T, U>, "No availabl conversion from T to U");
-  }
-};
+// template<typename U, typename T>
+//   requires (!Convertible<T, U>)
+// struct Convert<T, U> {
+//   static U to (T t) {
+//     static_assert (Convertible<T, U>, "No availabl conversion from T to U");
+//   }
+// };
 
 template<typename T, typename U>
 concept Interchangeable = Convertible<T, U> && Convertible<U, T>;

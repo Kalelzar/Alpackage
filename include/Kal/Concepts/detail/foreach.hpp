@@ -12,10 +12,17 @@ void foreach (const Iterable auto collection, Consumer<T> auto consumer) {
 }
 
 template<typename T, typename C>
-  requires IndexableT<C> &&(!Iterable<C>) &&SizeableT<C> void foreach (
-    const C          collection,
+  requires (!Iterable<C>)
+&&IndexableT<C> void foreach (SizeT            size,
+                              const C          collection,
+                              Consumer<T> auto consumer) {
+  for (SizeT i = 0; i < size; i++) { consumer (collection[i]); }
+}
+
+template<typename T, typename C>
+  requires SizeableT<C> &&(!Iterable<C>) &&IndexableT<C> void foreach (
+    const C          collect,
     Consumer<T> auto consumer) {
-    for (SizeT i = 0; i < collection.size ( ); i++) {
-      consumer (collection[i]);
-    }
+    foreach (collect.size ( ), collect, consumer)
+      ;
   }

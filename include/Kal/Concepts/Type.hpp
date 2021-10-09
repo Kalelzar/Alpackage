@@ -24,8 +24,15 @@ template<typename T> using RemoveVolatile = typename __RemoveVolatile<T>::Type;
 
 template<class T> using RemoveCV          = RemoveVolatile<RemoveConst<T>>;
 
-template<typename T> struct __IsPointer : std::false_type { };
-template<typename T> struct __IsPointer<T*> : std::true_type { };
+struct FalseType {
+  inline constexpr operator bool ( ) { return false; }
+};
+struct TrueType {
+  inline constexpr operator bool ( ) { return true; }
+};
+
+template<typename T> struct __IsPointer : FalseType { };
+template<typename T> struct __IsPointer<T*> : TrueType { };
 
 template<typename T> struct _IsPointer : __IsPointer<RemoveCV<T>> { };
 

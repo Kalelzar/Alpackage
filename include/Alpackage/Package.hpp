@@ -12,7 +12,8 @@
 namespace Alpackage {
 
 
-struct Package {
+class Package {
+  public:
   std::string name;
   std::string pm;
   bool        installed;

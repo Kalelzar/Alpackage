@@ -1,5 +1,7 @@
 #include <Alpackage/Util/EntryReader.hpp>
+
 #include <gtest/gtest.h>
+
 #include <rapidcheck/Assertions.h>
 #include <rapidcheck/gtest.h>
 #include <sstream>
