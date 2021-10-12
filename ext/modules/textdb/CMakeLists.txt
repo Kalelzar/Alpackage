@@ -38,4 +38,7 @@ set(RC_ENABLE_RTTI  ON CACHE BOOL "Rapidcheck RTTI Support"  FORCE)
 add_executable(AlpackageTextDB_test ${TEST_SRC})
 target_link_libraries(AlpackageTextDB_test PUBLIC $<$<CONFIG:ASAN>:asan> rapidcheck gtest gtest_main AlpackageTextDB Alpackage dl)
 
+install(TARGETS AlpackageTextDB
+  LIBRARY DESTINATION "lib/alpackage")
+
 gtest_discover_tests(AlpackageTextDB_test)

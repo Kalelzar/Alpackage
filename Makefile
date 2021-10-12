@@ -9,11 +9,18 @@ all: build
 ${PWD}/build/ninja:
 	@cmake -G "Ninja Multi-Config" -B build/ninja -DCMAKE_EXPORT_COMPILE_COMMANDS=true
 
+clean:
+	@rm build/ninja -rf
+
 docs:
 	@doxygen doxygen
 
 format:
 	@find . -iregex ".*pp" | grep -v -E './build|./lib' | xargs clang-format -style file -i
+
+tidy:
+	@find . -iregex ".*pp" | grep -v -E './build|./lib' | xargs clang-tidy include/Alpackage/Package.hpp -checks="-*,clang-analyzer-*,bugprone-*,boost-*,cert-*,cppcoreguidelines-*,hicpp-*,modernize-*,-modernize-use-trailing-return-type,-modernize-pass-by-value,performance-*,portability-*,readability-*" -fix
+
 
 # Release
 
@@ -21,7 +28,7 @@ build: ${PWD}/build/ninja format
 	@cmake --build build/ninja -j 4
 
 run: build
-	@./build/ninja/Release/${PROJECT_NAME}_main
+	@./build/ninja/Release/alpkg
 
 test: build
 	@ctest -j 4 --test-dir build/ninja/test -C Release
@@ -38,13 +45,16 @@ bench: build
 coverage: build
 	@cmake --build build/ninja -j 4 --config Release --target TestCoverage
 
+install: build
+	@sudo cmake --install build/ninja --config Release --prefix /usr
+
 # Debug
 
 debugBuild: ${PWD}/build/ninja format
 	@cmake --build build/ninja -j 4 --config Debug
 
 debug: debugBuild
-	@valgrind -s --leak-check=full ./build/ninja/Debug/$(PROJECT_NAME)_main
+	@valgrind -s --leak-check=full ./build/ninja/Debug/alpkg
 
 debugTest: debugBuild
 	@valgrind -s ctest -j 4 --test-dir build/ninja --output-on-failure -C Debug
@@ -64,7 +74,7 @@ ASANBuild: ${PWD}/build/ninja format
 	@cmake --build build/ninja -j 4 --config ASAN
 
 ASAN: ASANBuild
-	@./build/ninja/ASAN/$(PROJECT_NAME)_main
+	@./build/ninja/ASAN/alpkg
 
 ASANTest: ASANBuild
 	@ctest -j 4 --test-dir build/ninja --output-on-failure -C ASAN

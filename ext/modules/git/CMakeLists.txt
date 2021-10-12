@@ -38,5 +38,7 @@ set(RC_ENABLE_RTTI  ON CACHE BOOL "Rapidcheck RTTI Support"  FORCE)
 add_executable(AlpackageGit_test ${TEST_SRC})
 target_link_libraries(AlpackageGit_test PUBLIC $<$<CONFIG:ASAN>:asan> rapidcheck gtest gtest_main git2 AlpackageGit Alpackage dl)
 
+install(TARGETS AlpackageGit
+  LIBRARY DESTINATION "lib/alpackage")
 
 gtest_discover_tests(AlpackageGit_test)
