@@ -16,9 +16,9 @@ template<WithDefaultValue T> class Option {
 
   private:
   T    t;
-  bool defined;
+  bool defined{ };
   public:
-  constexpr Option ( ) : t (defaultValue<T>), defined (false) { }
+  constexpr Option ( ) : t (defaultValue<T>) { }
   constexpr Option (T t) : t (t), defined (true){ };
   constexpr Option (Convertible<T> auto t) : t (to<T> (t)), defined (true){ };
 
@@ -28,7 +28,7 @@ template<WithDefaultValue T> class Option {
     return *this;
   }
 
-  Option<T>& operator= (Option<T>& ot) {
+  Option<T>& operator= (Option<T> const& ot) {
     if (&ot != this) {
       t       = ot.t;
       defined = ot.defined;
@@ -42,14 +42,14 @@ template<WithDefaultValue T> class Option {
     return *this;
   }
 
-  constexpr inline bool isEmpty ( ) const { return !isDefined ( ); }
-  constexpr inline bool isDefined ( ) const { return defined; }
+  [[nodiscard]] constexpr inline bool isEmpty ( ) const {
+    return !isDefined ( );
+  }
+  [[nodiscard]] constexpr inline bool isDefined ( ) const { return defined; }
 
-  constexpr inline T    getOrElse (T def) const {
-    if (isDefined ( ))
-      return t;
-    else
-      return def;
+  constexpr inline T                  getOrElse (T def) const {
+    if (isDefined ( )) { return t; }
+    return def;
   }
 
   constexpr inline T getOrDefault ( ) const { return t; }
@@ -57,14 +57,11 @@ template<WithDefaultValue T> class Option {
   constexpr inline   operator bool ( ) const { return defined; }
 
   constexpr inline T get ( ) const {
-    if (isDefined ( )) {
-      return t;
-    } else {
-      throw std::runtime_error ("Attempt to access undefined Option.");
-    }
+    if (isDefined ( )) { return t; }
+    throw std::runtime_error ("Attempt to access undefined Option.");
   }
 
-  std::ostream operator<< (std::ostream& out) const requires OStreamable<T> {
+  std::ostream& operator<< (std::ostream& out) const requires OStreamable<T> {
     if (isDefined ( )) {
       out << t;
     } else {

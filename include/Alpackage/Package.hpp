@@ -7,6 +7,7 @@
 #include <set>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace Alpackage {
@@ -19,8 +20,8 @@ class Package {
   bool        installed;
 
   Package (std::string name, std::string pm, bool installed)
-      : name (name)
-      , pm (pm)
+      : name (std::move (name))
+      , pm (std::move (pm))
       , installed (installed) { }
 
   Package& operator= (Package const& other);
@@ -32,7 +33,7 @@ class Package {
   bool                 operator< (Package const& other) const;
 
   friend std::ostream& operator<< (std::ostream& out, Package const& p) {
-    out << "{ \"name\": \"" << p.name << "\", \"packageManager\": \"" << p.pm
+    out << R"({ "name": ")" << p.name << R"(", "packageManager": ")" << p.pm
         << "\" }";
     return out;
   }

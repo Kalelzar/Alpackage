@@ -22,9 +22,10 @@ class EntryReader {
   private:
   static void error ( ) {
 #ifdef __GNUC__
-    const std::type_info& ti = typeid (Entry);
-    int                   status;
-    char* realname = abi::__cxa_demangle (ti.name ( ), 0, 0, &status);
+    const std::type_info& ti     = typeid (Entry);
+    int                   status = 0;
+    auto*                 realname
+      = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
     Log::error ("Failed to read entry of type: %s", realname);
     Log::flush ( );
     free (realname);
@@ -43,7 +44,7 @@ class EntryReader {
       Entry e = defaultValue<Entry>;
       try {
         *in >> e;
-      } catch (std::runtime_error) { error ( ); }
+      } catch (std::runtime_error&) { error ( ); }
       if (in->fail ( )) { error ( ); }
       res.push_back (e);
     }
@@ -51,7 +52,7 @@ class EntryReader {
     return std::move (res);
   }
 
-  static Container parse (std::string path) {
+  static Container parse (const std::string& path) {
     std::ifstream file (path);
     auto          result = parse (&file);
     file.close ( );

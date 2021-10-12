@@ -27,7 +27,7 @@ template<typename T> class ModuleErrorOr {
   const ModuleError error = ModuleError::NONE;
 
   public:
-  ModuleErrorOr (const char* str) {
+  explicit ModuleErrorOr (const char* str) {
     std::ostringstream ss;
     ss << str;
     ModuleErrorOr (ss.str ( ));
@@ -46,12 +46,12 @@ template<typename T> class ModuleErrorOr {
       }
 
       constexpr ModuleErrorOr (T const& t) : value (t) { }
-      constexpr ModuleErrorOr (T&& t) : value (std::move (t)) { }
+      constexpr explicit ModuleErrorOr (T&& t) : value (std::move (t)) { }
       constexpr ModuleErrorOr (ModuleError e)
           : error (e)
           , value (defaultValue<T>) { }
 
-      const T getValue ( ) const {
+      T getValue ( ) const {
         if (isError ( )) {
           Log::error ("Accessing an empty value in ModuleErrorOr");
           throw std::runtime_error (
@@ -60,41 +60,46 @@ template<typename T> class ModuleErrorOr {
         return value;
       }
 
-      const Option<T> get ( ) const {
+      Option<T> get ( ) const {
         if (isError ( )) {
           Log::warn ("Accessing an empty value in ModuleErrorOr");
           return { };
         }
         return value;
       }
-      const ModuleError getError ( ) const { return error; }
-      bool              isError ( ) const { return error != ModuleError::NONE; }
+      [[nodiscard]] ModuleError getError ( ) const { return error; }
+      [[nodiscard]] bool        isError ( ) const {
+        return error != ModuleError::NONE;
+      }
 };
 
 class BOOST_SYMBOL_VISIBLE IAlpackageModule {
 
   public:
-  virtual constexpr bool                   canSearch ( ) const  = 0;
-  virtual constexpr bool                   canFind ( ) const    = 0;
-  virtual constexpr bool                   canInstall ( ) const = 0;
-  virtual constexpr bool                   canList ( ) const    = 0;
+  [[nodiscard]] virtual constexpr bool        canSearch ( ) const  = 0;
+  [[nodiscard]] virtual constexpr bool        canFind ( ) const    = 0;
+  [[nodiscard]] virtual constexpr bool        canInstall ( ) const = 0;
+  [[nodiscard]] virtual constexpr bool        canList ( ) const    = 0;
 
-  virtual constexpr const char*            version ( ) const    = 0;
-  virtual constexpr const char*            name ( ) const       = 0;
+  [[nodiscard]] virtual constexpr const char* version ( ) const    = 0;
+  [[nodiscard]] virtual constexpr const char* name ( ) const       = 0;
 
-  virtual ModuleError                      init ( )             = 0;
+  virtual ModuleError                         init ( )             = 0;
 
-  virtual ModuleErrorOr<std::set<Package>> installed ( ) const  = 0;
-  virtual ModuleErrorOr<std::set<Package>>
-                                 search (std::string const& query) const = 0;
-  virtual ModuleErrorOr<Package> find (std::string const& pkgName) const = 0;
-  virtual ModuleError            install (std::string const& pkgName)    = 0;
+  [[nodiscard]] virtual ModuleErrorOr<std::set<Package>>
+    installed ( ) const = 0;
+  [[nodiscard]] virtual ModuleErrorOr<std::set<Package>>
+    search (std::string const& query) const = 0;
+  [[nodiscard]] virtual ModuleErrorOr<Package>
+                      find (std::string const& pkgName) const = 0;
+  virtual ModuleError install (std::string const& pkgName)    = 0;
 
-  virtual ModuleError            install (Package const& pkg) {
+  virtual ModuleError install (Package const& pkg) {
     return install (pkg.name);
   }
 
 
-  virtual ~IAlpackageModule ( ){ };
+  virtual ~IAlpackageModule ( ) = default;
+  ;
 };
 }     // namespace Alpackage::Module

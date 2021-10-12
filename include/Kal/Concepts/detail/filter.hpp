@@ -14,7 +14,7 @@ template<typename T, template<typename> class C>
     filter (const C<T>& collection, Predicate<T> auto predicate) {
     C<T> newCollection = defaultValue<C<T>>;
     for (const T& it : collection) {
-      if (predicate (it)) newCollection.push_back (it);
+      if (predicate (it)) { newCollection.push_back (it); }
     }
 
     return std::move (newCollection);
@@ -25,10 +25,10 @@ template<typename T, template<typename> class C>
     filter (const C<T> collection, Predicate<T> auto predicate) {
     C<T> newCollection = defaultValue<C<T>>;
     for (const T& it : collection) {
-      if (predicate (it)) newCollection.insert (it);
+      if (predicate (it)) { newCollection.insert (it); }
     }
 
-    return newCollection;
+    return std::move (newCollection);
   }
 
 template<typename T, template<typename> class C>
@@ -37,10 +37,10 @@ template<typename T, template<typename> class C>
   filter (const C<T> collection, Predicate<T> auto predicate) {
   C<T> newCollection = defaultValue<C<T>>;
   for (SizeT i = 0; i < collection.size ( ); i++) {
-    if (predicate (collection[i])) newCollection.push_back (collection[i]);
+    if (predicate (collection[i])) { newCollection.push_back (collection[i]); }
   }
 
-  return newCollection;
+  return std::move (newCollection);
 }
 
 template<typename T>
@@ -49,9 +49,9 @@ requires IndexableT<T*> T* filter (SizeT             size,
                                    T*                newCollection,
                                    Predicate<T> auto predicate) {
   for (SizeT i = 0; i < size; i++) {
-    if (predicate (collection[i])) newCollection[i] = collection[i];
+    if (predicate (collection[i])) { newCollection[i] = collection[i]; }
   }
-  return std::move (newCollection);
+  return newCollection;
 }
 
 template<typename T, template<typename> class C>
@@ -60,10 +60,10 @@ template<typename T, template<typename> class C>
                                            Predicate<T> auto predicate) {
     C<T> newCollection = defaultValue<C<T>>;
     for (const T& it : collection) {
-      if (predicate (it)) newCollection.push_front (it);
+      if (predicate (it)) { newCollection.push_front (it); }
     }
 
     newCollection.reverse ( );
 
-    return newCollection;
+    return std::move (newCollection);
   }

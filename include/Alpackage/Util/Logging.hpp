@@ -15,7 +15,8 @@ class SeverityField {
   private:
   const char* severity;
   public:
-  constexpr SeverityField (const char* severity) : severity (severity){ };
+  constexpr explicit SeverityField (const char* severity)
+      : severity (severity){ };
 
   void format (reckless::output_buffer* poutputBuffer) const {
     size_t len = strlen (severity);
@@ -29,11 +30,12 @@ class CategoryField {
   private:
   const char* category;
   public:
-  constexpr CategoryField (const char* category) : category (category){ };
+  constexpr explicit CategoryField (const char* category)
+      : category (category){ };
 
   void format (reckless::output_buffer* poutputBuffer) const {
     size_t len = strlen (category);
-    char*  p   = poutputBuffer->reserve (len + 2);
+    auto*  p   = poutputBuffer->reserve (len + 2);
     *p         = '[';
     strncpy (p + 1, category, len);
     *(p + 1 + len) = ']';
@@ -103,15 +105,14 @@ class CategorizedSeverityLog : public reckless::basic_log {
 
 class Log {
   private:
-  static Log l;
+  static Log
+    l;     // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
+           // Needs to call vendor non-const code
   Log ( )
       : filewriter (LOGNAME ".log")
       , filelog (&filewriter)
       , errwriter ( )
-      , errlog (&errwriter) {
-    // reckless::install_crash_handler (&filelog);
-    // reckless::install_crash_handler (&errlog);
-  }
+      , errlog (&errwriter) { }
 
   using log_t = detail::CategorizedSeverityLog<reckless::indent<2>,
                                                ' ',
@@ -124,9 +125,7 @@ class Log {
   log_t                   errlog;
 
   public:
-  ~Log ( ) {
-    // reckless::uninstall_crash_handler ( );
-  }
+  ~Log ( ) = default;
 
   static inline void flush ( ) {
     l.filelog.flush ( );

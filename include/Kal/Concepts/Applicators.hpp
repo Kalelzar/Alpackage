@@ -32,6 +32,6 @@ template<typename T> T exchange (T& target, T& value) {
 
 template<typename T> T exchange (T& target, T&& value) {
   T temp = target;
-  target = std::move (value);
+  target = std::forward (value);
   return temp;
 }

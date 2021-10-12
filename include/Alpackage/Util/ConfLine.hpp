@@ -18,7 +18,7 @@ struct ConfLine {
 
   friend std::ostream& operator<< (std::ostream&   out,
                                    ConfLine const& instance) {
-    out << "{ \"name\": \"" << instance.name << "\", \"value\": \""
+    out << R"({ "name": ")" << instance.name << R"(", "value": ")"
         << instance.value << "\" }";
     return out;
   }
@@ -27,33 +27,36 @@ struct ConfLine {
   friend std::istream& operator>> (std::istream& in, ConfLine& instance) {
     Log::debug ("Parsing ConfLine.");
     reckless::scoped_indent indent;
-    char                    buffer[512];
+    static const size_t     bufferSize = 512;
+    char                    buffer[bufferSize];
     std::stringstream       name;
     std::stringstream       value;
     int                     point = 0;
     int                     mark  = 0;
-    int                     len;
+    size_t                  len   = 0;
     do {
-      in.getline (buffer, 512);
+      in.getline (buffer, bufferSize);
       len = strlen (buffer);
     } while (len == 0);
     Log::debug ("Acquired line of length %d: %s", len, buffer);
-    while (point < len && isWhitespace (buffer[point])) point++;
+    while (point < len && isWhitespace (buffer[point])) { point++; }
     Log::debug ("Discarded '%d' white space chars: %s", point, buffer + point);
     mark = point;
-    while (point < len && !isWhitespace (buffer[point]) && buffer[point] != '=')
+    while (point < len && !isWhitespace (buffer[point])
+           && buffer[point] != '=') {
       point++;
+    }
     Log::debug ("Skipped '%d' non-whitespace chars: %s",
                 point - mark,
                 buffer + point);
-    char cbuf[512];
+    char cbuf[bufferSize];
     std::strncpy (cbuf, buffer + mark, point - mark);
     cbuf[point - mark] = '\0';
     Log::debug ("Copy skipped chars in separate buffer: %s", cbuf);
     name << cbuf;
     instance.name = name.str ( );
     mark          = point;
-    while (point < len && isWhitespace (buffer[point])) point++;
+    while (point < len && isWhitespace (buffer[point])) { point++; }
     Log::debug ("Discarded '%d' white space chars: %s",
                 point - mark,
                 buffer + point);
@@ -63,11 +66,13 @@ struct ConfLine {
                   buffer[point]);
       Log::flush ( );
       throw std::runtime_error ("Invalid ConfLine");
-    } else
-      point++;
+    }
+
+    point++;
+
     Log::debug ("Skipped '=': %s", cbuf);
     mark = point;
-    while (point < len && isWhitespace (buffer[point])) point++;
+    while (point < len && isWhitespace (buffer[point])) { point++; }
     Log::debug ("Discarded '%d' white space chars: %s",
                 point - mark,
                 buffer + point);

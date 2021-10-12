@@ -23,107 +23,87 @@
 
 constexpr const char* XDG_CONFIG_HOME_DEFAULT = "~/.config";
 std::string           XDG_CONFIG_HOME ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_CONFIG_HOME")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_CONFIG_HOME' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::warn ("'XDG_CONFIG_HOME' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_CONFIG_HOME_DEFAULT);
-    return XDG_CONFIG_HOME_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_CONFIG_HOME' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::warn ("'XDG_CONFIG_HOME' is not set. You should probably remedy that. "
+             "Using '%s' as a default.",
+             XDG_CONFIG_HOME_DEFAULT);
+  return XDG_CONFIG_HOME_DEFAULT;
 }
 
 constexpr const char* XDG_DATA_HOME_DEFAULT = "~/.local/share";
 std::string           XDG_DATA_HOME ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_DATA_HOME")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_DATA_HOME' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::warn ("'XDG_DATA_HOME' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_DATA_HOME_DEFAULT);
-    return XDG_DATA_HOME_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_DATA_HOME' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::warn ("'XDG_DATA_HOME' is not set. You should probably remedy that. "
+             "Using '%s' as a default.",
+             XDG_DATA_HOME_DEFAULT);
+  return XDG_DATA_HOME_DEFAULT;
 }
 
 constexpr const char* XDG_CACHE_HOME_DEFAULT = "~/.cache";
 std::string           XDG_CACHE_HOME ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_CACHE_HOME")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_CACHE_HOME' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::warn ("'XDG_CACHE_HOME' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_CACHE_HOME_DEFAULT);
-    return XDG_CACHE_HOME_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_CACHE_HOME' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::warn ("'XDG_CACHE_HOME' is not set. You should probably remedy that. "
+             "Using '%s' as a default.",
+             XDG_CACHE_HOME_DEFAULT);
+  return XDG_CACHE_HOME_DEFAULT;
 }
 
 constexpr const char* XDG_STATE_HOME_DEFAULT = "~/.local/state";
 std::string           XDG_STATE_HOME ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_STATE_HOME")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_STATE_HOME' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::warn ("'XDG_STATE_HOME' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_STATE_HOME_DEFAULT);
-    return XDG_STATE_HOME_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_STATE_HOME' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::warn ("'XDG_STATE_HOME' is not set. You should probably remedy that. "
+             "Using '%s' as a default.",
+             XDG_STATE_HOME_DEFAULT);
+  return XDG_STATE_HOME_DEFAULT;
 }
 
 constexpr const char* XDG_RUNTIME_DIR_DEFAULT = "~/.cache/run/";
 std::string           XDG_RUNTIME_DIR ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_RUNTIME_DIR")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_RUNTIME_DIR' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::warn ("'XDG_RUNTIME_DIR' is not set. You REALLY should remedy that. "
-               "Using '%s' as a default.",
-               XDG_RUNTIME_DIR_DEFAULT);
-    return XDG_RUNTIME_DIR_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_RUNTIME_DIR' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::warn ("'XDG_RUNTIME_DIR' is not set. You REALLY should remedy that. "
+             "Using '%s' as a default.",
+             XDG_RUNTIME_DIR_DEFAULT);
+  return XDG_RUNTIME_DIR_DEFAULT;
 }
 
 /**
@@ -139,30 +119,26 @@ std::string           XDG_RUNTIME_DIR ( ) {
  */
 constexpr const char* XDG_EXEC_HOME_DEFAULT = "~/.local/bin";
 std::string           XDG_EXEC_HOME ( ) {
-  char* env;
+  char* env = nullptr;
   if ((env = getenv ("XDG_EXEC_HOME")) != nullptr && strlen (env) > 0) {
     std::filesystem::path path (env);
-    if (path.is_absolute ( ))
-      return env;
-    else {
-      Log::error ("The path in 'XDG_EXEC_HOME' needs to be absolute. It "
-                  "currently holds the relative path '%s'",
-                  env);
-      throw std::runtime_error ("XDG Basedir violation.");
-    }
-  } else {
-    Log::info ("'XDG_EXEC_HOME' is not set. You don't really need to set it. "
-               "Using '%s' as a default.",
-               XDG_EXEC_HOME_DEFAULT);
-    return XDG_EXEC_HOME_DEFAULT;
+    if (path.is_absolute ( )) { return env; }
+    Log::error ("The path in 'XDG_EXEC_HOME' needs to be absolute. It "
+                "currently holds the relative path '%s'",
+                env);
+    throw std::runtime_error ("XDG Basedir violation.");
   }
+  Log::info ("'XDG_EXEC_HOME' is not set. You don't really need to set it. "
+             "Using '%s' as a default.",
+             XDG_EXEC_HOME_DEFAULT);
+  return XDG_EXEC_HOME_DEFAULT;
 }
 
 
 constexpr const char*    XDG_DATA_DIRS_DEFAULT = "/usr/local/share:/usr/share";
 std::vector<std::string> XDG_DATA_DIRS ( ) {
-  char*       env;
-  const char* paths;
+  char*       env   = nullptr;
+  const char* paths = nullptr;
   if ((env = getenv ("XDG_DATA_DIRS")) != nullptr && strlen (env) > 0) {
     paths = env;
   } else {
@@ -191,8 +167,8 @@ std::vector<std::string> XDG_DATA_DIRS ( ) {
 }
 constexpr const char*    XDG_CONFIG_DIRS_DEFAULT = "/etc/xdg";
 std::vector<std::string> XDG_CONFIG_DIRS ( ) {
-  char*       env;
-  const char* paths;
+  char*       env   = nullptr;
+  const char* paths = nullptr;
   if ((env = getenv ("XDG_CONFIG_DIRS")) != nullptr && strlen (env) > 0) {
     paths = env;
   } else {
