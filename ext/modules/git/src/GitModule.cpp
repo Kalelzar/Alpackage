@@ -52,4 +52,7 @@ class GitModule : public IAlpackageModule {
   ~GitModule ( ) { git_libgit2_shutdown ( ); }
 };
 
+extern "C" BOOST_SYMBOL_EXPORT GitModule module;
+GitModule                                module;
+
 }     // namespace Alpackage::Module
