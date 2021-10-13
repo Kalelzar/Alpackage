@@ -17,15 +17,20 @@ ModulePtr ModuleLoader::load (std::string const&          moduleName,
   Log::info ("Loading %s from '%s'", moduleName, prefix.string ( ));
 
 
-  boost::shared_ptr<Alpackage::Module::IAlpackageModule> module;
+  boost::shared_ptr<Alpackage::Module::IAlpackageModule> module
+    = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
 
-  module = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
+      prefix / moduleName,
+      "module",
+      boost::dll::load_mode::append_decorations
 
-    prefix / moduleName,
-    "module",
-    boost::dll::load_mode::append_decorations
+    );
 
-  );
+  if (!module) {
+    Log::error ("Failed to load module: %s", moduleName);
+    throw std::runtime_error ("Failed to load module");
+  }
+
 
   auto result = module->init ( );
 

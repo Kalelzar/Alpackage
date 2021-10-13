@@ -8,7 +8,7 @@
 
 TEST (TextDB, Load) {
   auto mod = Alpackage::Module::ModuleLoader::getModule ("AlpackageTextDB",
-                                                         "/lib/alpackage");
+                                                         "/usr/lib/alpackage");
   ASSERT_STREQ (mod->name ( ), "TextDB");
   ASSERT_TRUE (mod->canList ( ));
   ASSERT_FALSE (mod->canFind ( ));
