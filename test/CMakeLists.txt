@@ -15,7 +15,7 @@ set(RC_ENABLE_RTTI  ON CACHE BOOL "Rapidcheck RTTI Support"  FORCE)
 
 add_executable(Alpackage_test ${TEST_SRC})
 
-target_link_libraries(Alpackage_test PUBLIC $<$<CONFIG:ASAN>:asan> -lprofiler -ltcmalloc rapidcheck gtest gtest_main Alpackage dl)
+target_link_libraries(Alpackage_test PUBLIC $<$<CONFIG:ASAN>:asan> $<$<CONFIG:Debug>:profiler> $<$<CONFIG:Release>:tcmalloc> $<$<CONFIG:Debug>:tcmalloc> rapidcheck gtest gtest_main Alpackage dl)
 
 gtest_discover_tests(Alpackage_test)
 

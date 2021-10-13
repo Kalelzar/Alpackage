@@ -1,7 +1,6 @@
 PROJECT_NAME := Alpackage
 
-.PHONY: all debugBuild ASANBuild build test debugTest ASANTest format run debug ASAN docs bench debugBench ASANBench
-
+.PHONY: all debugBuild ASANBuild build test debugTest ASANTest format run debug ASAN docs bench debugBench ASANBench install debugInstall ASANInstall
 all: build
 
 # MISC
@@ -68,6 +67,9 @@ debugBench: debugBuild
 debugCoverage: build
 	@cmake --build build/ninja -j 4 --config Debug --target TestCoverage
 
+debugInstall: debugBuild
+	@sudo cmake --install build/ninja --config Debug --prefix /usr
+
 # Address Sanitizer
 
 ASANBuild: ${PWD}/build/ninja format
@@ -87,3 +89,6 @@ ASANBench: ASANBuild
 
 ASANCoverage: build
 	@cmake --build build/ninja -j 4 --config ASAN --target TestCoverage
+
+ASANInstall: ASANBuild
+	@sudo cmake --install build/ninja --config ASAN --prefix /usr
