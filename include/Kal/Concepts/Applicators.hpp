@@ -16,6 +16,7 @@
 #include "detail/map.hpp"
 #include "detail/mkString.hpp"
 #include "detail/unique.hpp"
+#include "detail/zip.hpp"
 
 
 template<typename T> void swap (T& in, T& out) {
