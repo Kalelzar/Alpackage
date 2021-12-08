@@ -18,13 +18,20 @@ static std::istream& operator>> (std::istream& in, Alpackage::Package& p) {
       "Unexpected end of file while reading a Package.");
   }
 
-  char name[64];
-  char pkgmanager[16];
-  char version[64];
-  char description[128];
+  static const int nameSize    = 64;
+  static const int pkgmngrSize = 16;
+  static const int versionSize = 64;
+  static const int descSize    = 256;
 
-  char buffer[512];
-  in.getline (buffer, 512);
+  char             name[nameSize];
+  char             pkgmanager[pkgmngrSize];
+  char             version[versionSize];
+  char             description[descSize];
+
+  static const int bufferSize = 512;
+
+  char             buffer[bufferSize];
+  in.getline (buffer, bufferSize);
   if (in.fail ( )) {
     Log::error ("(%s:%d) Failed to get line from buffer: %s",
                 __FILE__,
