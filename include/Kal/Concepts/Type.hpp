@@ -33,13 +33,22 @@ struct TrueType {
   constexpr static bool value = true;
 };
 
-template<typename T> struct __IsPointer : FalseType { };
-template<typename T> struct __IsPointer<T*> : TrueType { };
+template<typename T> struct __IsPointer : public FalseType { };
+template<typename T> struct __IsPointer<T*> : public TrueType { };
 
 template<typename T> struct _IsPointer : __IsPointer<RemoveCV<T>> { };
 
 template<class T> inline constexpr bool IsPointer = _IsPointer<T>::value;
 
+template<class T> struct __IsRef : public FalseType { };
+template<class T> struct __IsRef<T&> : public TrueType { };
+template<class T> struct __IsRef<const T&> : public TrueType { };
+template<class T> inline constexpr bool IsRef = __IsRef<T>::value;
+
+template<class T> struct __IsConstRef : public FalseType { };
+template<class T> struct __IsConstRef<T&> : public FalseType { };
+template<class T> struct __IsConstRef<const T&> : public TrueType { };
+template<class T> inline constexpr bool IsConstRef = __IsConstRef<T>::value;
 
 template<typename T> struct __MakeUnsigned { using Type = void; };
 template<> struct __MakeUnsigned<signed char> { using Type = unsigned char; };
@@ -166,6 +175,32 @@ concept NotConst = Same<RemoveConst<T>, T>;
  */
 template<typename T>
 concept Pointer = IsPointer<T>;
+
+/** @defgroup Ref Reference
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a reference.
+ *
+ * @tparam T type
+ *
+ * Only true when \c T is a reference.
+ *
+ */
+template<typename T>
+concept Ref = IsRef<T>;
+
+/** @defgroup ConstRef Const Reference
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a const reference.
+ *
+ * @tparam T type
+ *
+ * Only true when \c T is a const reference.
+ *
+ */
+template<typename T>
+concept ConstRef = IsConstRef<T>;
 
 /** @defgroup Nullable Nullable
  *  @ingroup TypeConcepts
