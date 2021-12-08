@@ -55,9 +55,12 @@ template<WithDefaultValue T> class Option {
     throw std::runtime_error ("Attempt to access undefined Option.");
   }
 
-  std::ostream& operator<< (std::ostream& out) const requires OStreamable<T> {
-    if (isDefined ( )) {
-      out << t;
+
+  friend std::ostream&
+    operator<< (std::ostream&    out,
+                Option<T> const& instance) requires OStreamable<T> {
+    if (instance.isDefined ( )) {
+      out << instance.t;
     } else {
       out << "None";
     }
