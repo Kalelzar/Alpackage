@@ -10,7 +10,7 @@
 RC_GTEST_PROP (EntryReader, TestReadInt, (int a, int b, int c)) {
   std::stringstream s;
   s << a << " " << b << " " << c;
-  auto v = EntryReader<int>::parse (&s);
+  auto v = TRY_RC_ASSERT (EntryReader<int>::parse (&s));
   RC_ASSERT (v.size ( ) == 3);
   RC_ASSERT (v[0] == a);
   RC_ASSERT (v[1] == b);
@@ -32,7 +32,7 @@ class ThreeNumbers {
 RC_GTEST_PROP (EntryReader, TestReadStruct, (int a, int b, int c)) {
   std::stringstream s;
   s << a << " " << b << " " << c;
-  auto v = EntryReader<ThreeNumbers>::parse (&s);
+  auto v = TRY_RC_ASSERT (EntryReader<ThreeNumbers>::parse (&s));
   RC_ASSERT (v.size ( ) == 1);
   RC_ASSERT (v[0].a == a);
   RC_ASSERT (v[0].b == b);
@@ -43,5 +43,5 @@ RC_GTEST_PROP (EntryReader, TestReadStruct, (int a, int b, int c)) {
 RC_GTEST_PROP (EntryReader, TestReadStructFail, (int a, int b)) {
   std::stringstream s;
   s << a << " " << b;
-  RC_ASSERT_THROWS (EntryReader<ThreeNumbers>::parse (&s));
+  RC_ASSERT (EntryReader<ThreeNumbers>::parse (&s).isEmpty ( ));
 }
