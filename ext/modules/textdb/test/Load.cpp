@@ -7,8 +7,9 @@
 #include <sstream>
 
 TEST (TextDB, Load) {
-  auto mod = Alpackage::Module::ModuleLoader::getModule ("AlpackageTextDB",
-                                                         "/usr/lib/alpackage");
+  auto mod_ = Alpackage::Module::ModuleLoader::getModule ("AlpackageTextDB");
+  ASSERT_TRUE (mod_.isDefined ( ));
+  auto mod = mod_.get ( );
   ASSERT_STREQ (mod->name ( ), "TextDB");
   ASSERT_TRUE (mod->canList ( ));
   ASSERT_FALSE (mod->canFind ( ));

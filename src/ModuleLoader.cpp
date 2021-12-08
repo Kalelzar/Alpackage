@@ -2,37 +2,41 @@
 #include <Alpackage/Module/ModuleLoader.hpp>
 #include <Alpackage/Util/Logging.hpp>
 
+#include <Kal/Format.hpp>
+
 #include <boost/dll/import.hpp>
 
 namespace Alpackage::Module {
 
 using ModulePtr = boost::shared_ptr<IAlpackageModule>;
 
-ModulePtr ModuleLoader::load (std::string const& moduleName) {
-  return load (moduleName, "/usr/lib/alpackage/");
+ErrorOr<ModulePtr> ModuleLoader::load (std::string const& moduleName) {
+  return TRY (load (moduleName, "/usr/lib/alpackage/"));
 }
 
-ModulePtr ModuleLoader::load (std::string const&          moduleName,
-                              boost::dll::fs::path const& prefix) {
+ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
+                                       boost::dll::fs::path const& prefix) {
   Log::info ("Loading %s from '%s'", moduleName, prefix.string ( ));
 
+  boost::shared_ptr<Alpackage::Module::IAlpackageModule> module;
 
-  boost::shared_ptr<Alpackage::Module::IAlpackageModule> module
-    = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
+  try {
+    module = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
 
       prefix / moduleName,
       "module",
-      boost::dll::load_mode::append_decorations
-
-    );
-
-  if (!module) {
-    Log::error ("Failed to load module: %s", moduleName);
-    throw std::runtime_error ("Failed to load module");
+      boost::dll::load_mode::append_decorations);
+  } catch (boost::system::system_error& e) {
+    return format ("Exception caught (boost::system::system_error) : {}",
+                   e.what ( ));
   }
 
+  if (!module) { return format ("Failed to load module: %s", moduleName); }
 
-  auto result = module->init ( );
+
+  auto result = TRY_WITH (
+    module->init ( ),
+    format ("Could not load {} from {}.", moduleName, prefix.string ( )));
 
   if (result != ModuleError::NONE) {
     Log::error ("Failed to initialize module: %s", moduleName);
@@ -53,13 +57,15 @@ ModulePtr ModuleLoader::load (std::string const&          moduleName,
   }
 }
 
-ModulePtr ModuleLoader::getModule (std::string moduleName) {
-  return load (moduleName);
+ErrorOr<ModulePtr> ModuleLoader::getModule (std::string moduleName) {
+  return TRY_WITH (load (moduleName),
+                   format ("Loading '{}' failed.", moduleName));
 }
 
-ModulePtr ModuleLoader::getModule (std::string                 moduleName,
-                                   boost::dll::fs::path const& prefix) {
-  return load (moduleName, prefix);
+ErrorOr<ModulePtr>
+  ModuleLoader::getModule (std::string                 moduleName,
+                           boost::dll::fs::path const& prefix) {
+  return TRY (load (moduleName, prefix));
 }
 
 }     // namespace Alpackage::Module

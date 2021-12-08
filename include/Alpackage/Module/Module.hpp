@@ -5,6 +5,7 @@
 
 //#include <Kal/Concepts/TypeConversion.hpp>
 
+#include <Kal/ErrorOr.hpp>
 #include <Kal/Option.hpp>
 #include <Kal/default.hpp>
 
@@ -21,6 +22,7 @@ enum class ModuleError {
   UNSUPPORTED,
 };
 
+
 template<typename T> class ModuleErrorOr {
   private:
   const T           value;
@@ -34,34 +36,29 @@ template<typename T> class ModuleErrorOr {
   }
 
 
+  constexpr ModuleErrorOr (T const& t) : value (t) { }
+  constexpr explicit ModuleErrorOr (T&& t) : value (std::move (t)) { }
+  constexpr ModuleErrorOr (ModuleError e)
+      : error (e)
+      , value (defaultValue<T>) { }
 
+  T getValue ( ) const {
+    if (isError ( )) {
+      Log::error ("Accessing an empty value in ModuleErrorOr");
+      exit (1);     // Unrecoverable error.
+    }
+    return value;
+  }
 
-      constexpr ModuleErrorOr (T const& t) : value (t) { }
-      constexpr explicit ModuleErrorOr (T&& t) : value (std::move (t)) { }
-      constexpr ModuleErrorOr (ModuleError e)
-          : error (e)
-          , value (defaultValue<T>) { }
-
-      T getValue ( ) const {
-        if (isError ( )) {
-          Log::error ("Accessing an empty value in ModuleErrorOr");
-          throw std::runtime_error (
-            "Accessing an empty value in ModuleErrorOr");
-        }
-        return value;
-      }
-
-      Option<T> get ( ) const {
-        if (isError ( )) {
-          Log::warn ("Accessing an empty value in ModuleErrorOr");
-          return { };
-        }
-        return value;
-      }
-      [[nodiscard]] ModuleError getError ( ) const { return error; }
-      [[nodiscard]] bool        isError ( ) const {
-        return error != ModuleError::NONE;
-      }
+  Option<T> get ( ) const {
+    if (isError ( )) {
+      Log::warn ("Accessing an empty value in ModuleErrorOr");
+      return { };
+    }
+    return value;
+  }
+  [[nodiscard]] ModuleError getError ( ) const { return error; }
+  [[nodiscard]] bool isError ( ) const { return error != ModuleError::NONE; }
 };
 
 class BOOST_SYMBOL_VISIBLE IAlpackageModule {
@@ -75,7 +72,7 @@ class BOOST_SYMBOL_VISIBLE IAlpackageModule {
   [[nodiscard]] virtual constexpr const char* version ( ) const    = 0;
   [[nodiscard]] virtual constexpr const char* name ( ) const       = 0;
 
-  virtual ModuleError                         init ( )             = 0;
+  virtual ErrorOr<ModuleError>                init ( )             = 0;
 
   [[nodiscard]] virtual ModuleErrorOr<std::set<Package>>
     installed ( ) const = 0;

@@ -34,12 +34,12 @@ class GitModule : public IAlpackageModule {
   };
   [[nodiscard]] constexpr const char* name ( ) const override { return "Git"; };
 
-  virtual ModuleError           init ( ) override {
+  ErrorOr<ModuleError>                init ( ) override {
     Log::info ("Initializing module: %s", name ( ));
     git_libgit2_init ( );
-    try {
+    {
       reckless::scoped_indent indent;
-    } catch (char const* s) { throw std::runtime_error (s); }
+    }
     return ModuleError::NONE;
   };
 

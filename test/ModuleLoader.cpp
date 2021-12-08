@@ -7,7 +7,6 @@
 #include <stdexcept>
 
 TEST (ModuleLoader, LoadNonexistent) {
-  ASSERT_THROW (
-    Alpackage::Module::ModuleLoader ::getModule ("NonexistentModule"),
-    std::runtime_error);
+  ASSERT_TRUE (Alpackage::Module::ModuleLoader ::getModule ("NonexistentModule")
+                 .isEmpty ( ));
 }

@@ -20,41 +20,45 @@ class TextDbModule : public IAlpackageModule {
   std::set<Package> pkgs;
 
   public:
-  virtual constexpr bool        canSearch ( ) const override { return false; }
-  virtual constexpr bool        canFind ( ) const override { return false; }
-  virtual constexpr bool        canInstall ( ) const override { return false; }
-  virtual constexpr bool        canList ( ) const override { return true; }
+  [[nodiscard]] constexpr bool canSearch ( ) const override { return false; }
+  [[nodiscard]] constexpr bool canFind ( ) const override { return false; }
+  [[nodiscard]] constexpr bool canInstall ( ) const override { return false; }
+  [[nodiscard]] constexpr bool canList ( ) const override { return true; }
 
-  virtual constexpr const char* version ( ) const override { return "1.0.1"; };
-  virtual constexpr const char* name ( ) const override { return "TextDB"; };
+  [[nodiscard]] constexpr const char* version ( ) const override {
+    return "1.0.1";
+  };
+  [[nodiscard]] constexpr const char* name ( ) const override {
+    return "TextDB";
+  };
 
-  virtual ModuleError           init ( ) override {
+  [[nodiscard]] ErrorOr<ModuleError> init ( ) override {
     Log::info ("Initializing module: %s", name ( ));
-    try {
+    {
       reckless::scoped_indent indent;
       Option<std::string>     confdir
         = findFirstFile (XDG_CONFIG_DIRS ( ), "alpackage/textdb.scsv");
       if (!confdir) confdir = "textdb.scsv";
 
       Log::info ("Loading config from '%s'", confdir.get ( ));
-      pkgs = readConfig (confdir.get ( ));
-    } catch (char const* s) { throw std::runtime_error (s); }
+      pkgs = TRY (readConfig (confdir.get ( )));
+    }
     return ModuleError::NONE;
   };
 
-  virtual ModuleErrorOr<std::set<Package>> installed ( ) const override {
+  [[nodiscard]] ModuleErrorOr<std::set<Package>> installed ( ) const override {
     return pkgs;
   };
 
-  virtual ModuleErrorOr<std::set<Package>>
+  [[nodiscard]] ModuleErrorOr<std::set<Package>>
     search (std::string const& query) const override {
     return ModuleError::UNSUPPORTED;
   }
-  virtual ModuleErrorOr<Package>
+  [[nodiscard]] ModuleErrorOr<Package>
     find (std::string const& pkgName) const override {
     return ModuleError::UNSUPPORTED;
   }
-  virtual ModuleError install (std::string const& pkgName) override {
+  [[nodiscard]] ModuleError install (std::string const& pkgName) override {
     return ModuleError::UNSUPPORTED;
   }
 };

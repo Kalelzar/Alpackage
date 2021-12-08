@@ -18,8 +18,7 @@ RC_GTEST_PROP (ModuleErrorOr, HasValue, (int a)) {
 TEST (ModuleErrorOr, HasError) {
   Alpackage::Module::ModuleErrorOr<int> b (
     Alpackage::Module::ModuleError::UNSUPPORTED);
-  RC_ASSERT (b.isError ( ));
-  RC_ASSERT_THROWS (b.getValue ( ));
-  RC_ASSERT (b.get ( ).isEmpty ( ));
-  RC_ASSERT (b.getError ( ) == Alpackage::Module::ModuleError::UNSUPPORTED);
+  ASSERT_TRUE (b.isError ( ));
+  ASSERT_TRUE (b.get ( ).isEmpty ( ));
+  ASSERT_EQ (b.getError ( ), Alpackage::Module::ModuleError::UNSUPPORTED);
 }
