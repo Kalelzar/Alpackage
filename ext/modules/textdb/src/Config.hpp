@@ -1,9 +1,11 @@
 #pragma once
 
-//#include "Logging.hpp"
 #include <Alpackage/Package.hpp>
 #include <Alpackage/Util/EntryReader.hpp>
 #include <Alpackage/Util/Logging.hpp>
+
+#include <Kal/ErrorOr.hpp>
+#include <Kal/Format.hpp>
 
 #include <cstring>
 #include <fstream>
@@ -38,55 +40,56 @@ static std::istream& operator>> (std::istream& in, Alpackage::Package& p) {
                 __LINE__);
     throw std::runtime_error ("Failed to get line from buffer.");
   }
-  int read  = strlen (buffer);
+  size_t read  = strlen (buffer);
 
-  int point = 0;
-  int mark  = 0;
+  int    point = 0;
+  int    mark  = 0;
 
-  while (point < read && buffer[point] != ';') point++;
+  // FIXME: Check that output buffers are large enough to hold what is being put
+  // in them
+  //       Better yet dynamically scale their size to fit their data.
+
+  while (point < read && buffer[point] != ';') { point++; }
   strncpy (name, buffer + mark, point - mark);
   name[point - mark] = '\0';
   point++;
   mark = point;
 
-  while (point < read && buffer[point] != ';') point++;
+  while (point < read && buffer[point] != ';') { point++; }
   strncpy (pkgmanager, buffer + mark, point - mark);
   pkgmanager[point - mark] = '\0';
   point++;
   mark = point;
 
-  while (point < read && buffer[point] != ';') point++;
+  while (point < read && buffer[point] != ';') { point++; }
   strncpy (version, buffer + mark, point - mark);
   version[point - mark] = '\0';
   point++;
   mark = point;
+  if (mark <= read) {
+    strncpy (description, buffer + mark, read - mark);
+    description[read - mark] = '\0';
+  }
 
-  strncpy (description, buffer + mark, read - mark);
-  description[read - mark] = '\0';
-
-
-  p                        = Alpackage::Package (name, pkgmanager, true);
+  p = Alpackage::Package (name, pkgmanager, true);
 
   return in;
 }
 
 
-std::vector<Alpackage::Package> readConfig (std::istream* in) {
+ErrorOr<std::vector<Alpackage::Package>> readConfig (std::istream* in) {
   return EntryReader<Alpackage::Package>::parse (in);
 }
 
 // FIX: This fails if there is a newline after the last entry in a file
-std::set<Alpackage::Package> readConfig (std::string configPath) {
+ErrorOr<std::set<Alpackage::Package>> readConfig (std::string configPath) {
   std::ifstream file (configPath);
 
   if (!file.is_open ( )) {
-    Log::error ("(%s:%d) Failed to open file for read: %s",
-                __FILE__,
-                __LINE__,
-                configPath);
-    throw std::runtime_error ("Failed to open file for read");
+    return format ("Failed to open file for read: {}", std::move (configPath));
   }
-  auto res = readConfig (&file);
+
+  auto res = TRY (readConfig (&file));
 
   file.close ( );
 
