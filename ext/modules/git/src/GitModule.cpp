@@ -39,6 +39,18 @@ class GitModule : public IAlpackageModule {
     git_libgit2_init ( );
     {
       reckless::scoped_indent indent;
+
+      Log::info ("Loading local gpkgs from $XDG_CONFIG_HOME/alpackage/gpkg/");
+
+      auto p = TRY (mapDirectoryFiles<std::vector<ConfLine>> (
+        XDG_CONFIG_HOME ( ) + "/alpackage/gpkg/",
+        [] (auto& t) -> ErrorOr<std::vector<ConfLine>> {
+          std::ifstream in (t.path ( ));
+          auto          res = TRY (EntryReader<ConfLine>::parse (&in));
+          in.close ( );
+          // TODO: Convert to Package.
+          return res;
+        }));
     }
     return ModuleError::NONE;
   };
