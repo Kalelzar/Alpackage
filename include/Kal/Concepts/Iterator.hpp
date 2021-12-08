@@ -99,12 +99,12 @@ concept IterableWith = Iterable<T> && requires (T t) {
 
 template<typename T, typename U>
 concept IterableWithConst = (NotConst<U> && Iterable<T> && requires (T t) {
-  { *t.begin ( ) } -> Same<const U&>;
+  { *t.begin ( ) } -> SameCVR<U>;
 });
 
 template<typename T, typename U>
 concept ConstIterableWith = (ConstIterable<T> && requires (T t) {
-  { *t.cbegin ( ) } -> Same<AddConst<U>&>;
+  { *t.cbegin ( ) } -> SameCVR<U>;
 });
 
 template<typename T, typename U>

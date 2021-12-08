@@ -25,10 +25,12 @@ template<typename T> using RemoveVolatile = typename __RemoveVolatile<T>::Type;
 template<class T> using RemoveCV          = RemoveVolatile<RemoveConst<T>>;
 
 struct FalseType {
-  inline constexpr operator bool ( ) { return false; }
+  inline constexpr      operator bool ( ) { return false; }
+  constexpr static bool value = false;
 };
 struct TrueType {
-  inline constexpr operator bool ( ) { return true; }
+  inline constexpr      operator bool ( ) { return true; }
+  constexpr static bool value = true;
 };
 
 template<typename T> struct __IsPointer : FalseType { };
@@ -82,6 +84,11 @@ template<typename T> using MakeSigned = typename __MakeSigned<T>::Type;
 template<typename T, typename U> inline constexpr bool IsSame       = false;
 template<typename T> inline constexpr bool             IsSame<T, T> = true;
 
+template<typename T, typename U>
+inline constexpr bool IsSameCVR
+  = IsSame<RemoveRef<RemoveCV<T>>, RemoveRef<RemoveCV<U>>>;
+template<typename T> inline constexpr bool IsSameCVR<T, T> = true;
+
 /// @defgroup TypeConcepts Type Concepts
 
 /** @defgroup Same Same
@@ -98,11 +105,26 @@ template<typename T> inline constexpr bool             IsSame<T, T> = true;
 template<typename T, typename U>
 concept Same = IsSame<T, U>;
 
+/** @defgroup SameCVR SameCVR
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of type equality up to a const, volatile or
+ * reference.
+ * @see Same
+ *
+ * @tparam T left
+ * @tparam U right
+ *
+ * Only true when \c T and \c U are the \e EXACT same type
+ *
+ */
+template<typename T, typename U>
+concept SameCVR = IsSameCVR<T, U>;
 
 /** @defgroup Const Const
  *  @ingroup TypeConcepts
  *
- * @brief Encode s the concept of a constant type.
+ * @brief Encodes the concept of a constant type.
  *
  * @tparam T type
  *
