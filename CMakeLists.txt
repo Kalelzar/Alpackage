@@ -16,7 +16,7 @@ include(CTest)
 
 set (BOOST_ROOT "lib/boost")
 
-add_compile_options(-fPIC $<$<CONFIG:ASAN>:-fsanitize=address> -fconcepts-diagnostics-depth=2  $<$<CONFIG:ASAN>:-lasan>)
+add_compile_options(-fPIC $<$<CONFIG:ASAN>:-fsanitize=address> -fconcepts-diagnostics-depth=2)
 
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -29,7 +29,7 @@ add_subdirectory(ext)
 
 add_executable(Alpackage_main exec/main.cpp)
 set_target_properties(Alpackage_main PROPERTIES OUTPUT_NAME "alpkg")
-target_link_libraries(Alpackage_main PUBLIC $<$<CONFIG:ASAN>:asan> $<$<CONFIG:Debug>:profiler> $<$<CONFIG:Release>:tcmalloc> $<$<CONFIG:Debug>:tcmalloc> Alpackage dl)
+target_link_libraries(Alpackage_main PUBLIC $<$<CONFIG:Debug>:profiler> $<$<CONFIG:Debug>:tcmalloc> Alpackage dl)
 #target_link_libraries(Alpackage_main PUBLIC reckless pthread)
 
 add_subdirectory(test)
