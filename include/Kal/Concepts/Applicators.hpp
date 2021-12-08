@@ -11,6 +11,7 @@
 
 #include "detail/aggregate.hpp"
 #include "detail/filter.hpp"
+#include "detail/forall.hpp"
 #include "detail/foreach.hpp"
 #include "detail/lift.hpp"
 #include "detail/map.hpp"
