@@ -1,7 +1,8 @@
 #pragma once
 
 #include <Kal/Concepts/Stream.hpp>
-#include <Kal/Concepts/TypeConversion.hpp>
+
+//#include <Kal/Concepts/TypeConversion.hpp>
 
 #include <Kal/default.hpp>
 
@@ -20,7 +21,6 @@ template<WithDefaultValue T> class Option {
   public:
   constexpr Option ( ) : t (defaultValue<T>) { }
   constexpr Option (T t) : t (t), defined (true){ };
-  constexpr Option (Convertible<T> auto t) : t (to<T> (t)), defined (true){ };
 
   Option<T>& operator= (T ot) {
     t       = ot;
@@ -33,12 +33,6 @@ template<WithDefaultValue T> class Option {
       t       = ot.t;
       defined = ot.defined;
     }
-    return *this;
-  }
-
-  Option<T>& operator= (Convertible<T> auto ot) {
-    t       = to<T> (ot);
-    defined = true;
     return *this;
   }
 

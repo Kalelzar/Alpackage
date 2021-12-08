@@ -3,7 +3,7 @@
 #include <Alpackage/Package.hpp>
 #include <Alpackage/Util/Logging.hpp>
 
-#include <Kal/Concepts/TypeConversion.hpp>
+//#include <Kal/Concepts/TypeConversion.hpp>
 
 #include <Kal/Option.hpp>
 #include <Kal/default.hpp>
@@ -33,17 +33,8 @@ template<typename T> class ModuleErrorOr {
     ModuleErrorOr (ss.str ( ));
   }
 
-  template<typename U> U to ( ) const requires Same<T, U> { return value; }
 
-  template<typename U>
-    requires CanConvertTo<T, U> &&(!Same<T, U>) U to ( ) const {
-      return value.template to<U> ( );
-    }
 
-    template<typename U>
-      requires ConstructibleFrom<U, T> &&(!Same<T, U>) U to ( ) const {
-        return U (value);
-      }
 
       constexpr ModuleErrorOr (T const& t) : value (t) { }
       constexpr explicit ModuleErrorOr (T&& t) : value (std::move (t)) { }
