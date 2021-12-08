@@ -2,7 +2,7 @@
 
 #include <Alpackage/Util/Logging.hpp>
 
-#include <Kal/Concepts/Applicators.hpp>
+#include <Kal/Concepts/detail/mkString.hpp>
 
 #include <Kal/Option.hpp>
 
@@ -28,12 +28,12 @@ std::string           XDG_CONFIG_HOME ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_CONFIG_HOME' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::warn ("'XDG_CONFIG_HOME' is not set. You should probably remedy that. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_CONFIG_HOME_DEFAULT);
   return XDG_CONFIG_HOME_DEFAULT;
 }
@@ -45,12 +45,12 @@ std::string           XDG_DATA_HOME ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_DATA_HOME' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::warn ("'XDG_DATA_HOME' is not set. You should probably remedy that. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_DATA_HOME_DEFAULT);
   return XDG_DATA_HOME_DEFAULT;
 }
@@ -62,12 +62,12 @@ std::string           XDG_CACHE_HOME ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_CACHE_HOME' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::warn ("'XDG_CACHE_HOME' is not set. You should probably remedy that. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_CACHE_HOME_DEFAULT);
   return XDG_CACHE_HOME_DEFAULT;
 }
@@ -79,12 +79,12 @@ std::string           XDG_STATE_HOME ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_STATE_HOME' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::warn ("'XDG_STATE_HOME' is not set. You should probably remedy that. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_STATE_HOME_DEFAULT);
   return XDG_STATE_HOME_DEFAULT;
 }
@@ -96,12 +96,12 @@ std::string           XDG_RUNTIME_DIR ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_RUNTIME_DIR' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::warn ("'XDG_RUNTIME_DIR' is not set. You REALLY should remedy that. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_RUNTIME_DIR_DEFAULT);
   return XDG_RUNTIME_DIR_DEFAULT;
 }
@@ -124,12 +124,12 @@ std::string           XDG_EXEC_HOME ( ) {
     std::filesystem::path path (env);
     if (path.is_absolute ( )) { return env; }
     Log::error ("The path in 'XDG_EXEC_HOME' needs to be absolute. It "
-                "currently holds the relative path '%s'",
+                          "currently holds the relative path '%s'",
                 env);
     throw std::runtime_error ("XDG Basedir violation.");
   }
   Log::info ("'XDG_EXEC_HOME' is not set. You don't really need to set it. "
-             "Using '%s' as a default.",
+                       "Using '%s' as a default.",
              XDG_EXEC_HOME_DEFAULT);
   return XDG_EXEC_HOME_DEFAULT;
 }
@@ -207,9 +207,9 @@ inline Option<std::string> findFileAt (std::string root,
   return { };
 }
 
-inline Option<std::string> findFirstFile (std::vector<std::string> paths,
+inline Option<std::string> findFirstFile (std::vector<std::string> const& paths,
                                           std::string relativeFile) {
-  for (auto p : paths) {
+  for (auto const& p : paths) {
     auto path = findFileAt (p, relativeFile);
     if (path) { return path; }
   }
