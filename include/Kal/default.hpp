@@ -5,8 +5,11 @@
 
 template<typename T> inline const T     defaultValue;
 template<Integral T> inline constexpr T defaultValue<T> = 0;
+template<TriviallyConstructible T>
+  requires (!Integral<T>)
+inline const T defaultValue<T> = { };
 
 template<typename T>
 concept WithDefaultValue = requires (T b) {
-  {b = defaultValue<T>};
+  {b = defaultValue<RemoveRef<T>>};
 };
