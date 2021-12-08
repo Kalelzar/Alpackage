@@ -130,6 +130,21 @@ concept Same = IsSame<T, U>;
 template<typename T, typename U>
 concept SameCVR = IsSameCVR<T, U>;
 
+/** @defgroup SameContainer Same Container
+ *  @ingroup TypeConcepts
+ *
+ * @brief Encodes the concept of a equal containers.
+ *
+ * @tparam T type
+ * @tparam C container
+ *
+ * Only true when \c T and \c C<T::value_type> are the \e EXACT same type.
+ * (Compared via @ref Same)
+ *
+ */
+template<class T, template<typename, typename...> class C>
+concept SameContainer = Same<C<typename T::value_type>, T>;
+
 /** @defgroup Const Const
  *  @ingroup TypeConcepts
  *
