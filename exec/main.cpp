@@ -5,22 +5,24 @@
 #include <Alpackage/Util/Logging.hpp>
 
 #include <Kal/Concepts/Applicators.hpp>
-#include <Kal/Concepts/TypeConversion.hpp>
 
+#include <Kal/Flag.hpp>
 #include <Kal/XDGBaseDir.hpp>
 
 #include <boost/dll/import.hpp>
 #include <iostream>
 #include <stdexcept>
 
+#define KAL_UNHANDLED_ERROR 255
 
-int main (int argc, char** argv) {
-  try {
-  } catch (std::runtime_error& e) {
-    std::cerr << "Encountered unrecoverable error: " << e.what ( ) << std::endl
-              << "See logs for more details" << std::endl;
+ErrorOr<int> kalmain (int argc, char** argv) { return 0; }
 
-
-    return 1;
+int          main (int argc, char** argv) {
+  auto t = kalmain (argc, argv);
+  if (t.isEmpty ( )) {
+    std::cerr << t << std::endl;
+    return KAL_UNHANDLED_ERROR;
   }
+
+  return t.get ( );
 }
