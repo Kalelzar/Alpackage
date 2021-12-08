@@ -29,14 +29,14 @@ RC_GTEST_PROP (Option, CanHoldNoValue, (int val)) {
 
   RC_ASSERT_FALSE (b.isDefined ( ));
   RC_ASSERT (b.isEmpty ( ));
-  RC_ASSERT_THROWS (b.get ( ));
   RC_ASSERT (b.getOrElse (val) == val);
   RC_ASSERT (b.getOrDefault ( ) == defaultValue<int>);
 }
 
+
 RC_GTEST_PROP (Option, Copy, (Option<int> opt, int val)) {
   Option<int> opt2 = opt;
-  std::cout << opt << " " << opt2 << std::endl;
+
   RC_ASSERT (opt.isDefined ( ) == opt2.isDefined ( ));
   RC_ASSERT (opt.getOrElse (val) == opt2.getOrElse (val));
   RC_ASSERT (opt.getOrDefault ( ) == opt2.getOrDefault ( ));

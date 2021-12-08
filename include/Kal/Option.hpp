@@ -2,6 +2,7 @@
 
 #include <Kal/Concepts/Stream.hpp>
 
+#include <Kal/ErrorOr.hpp>
 //#include <Kal/Concepts/TypeConversion.hpp>
 
 #include <Kal/default.hpp>
@@ -52,7 +53,7 @@ template<WithDefaultValue T> class Option {
 
   constexpr inline T get ( ) const {
     if (isDefined ( )) { return t; }
-    throw std::runtime_error ("Attempt to access undefined Option.");
+    exit (1);     // Unrecoverable
   }
 
 
