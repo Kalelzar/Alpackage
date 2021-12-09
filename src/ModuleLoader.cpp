@@ -39,8 +39,7 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
     format ("Could not load {} from {}.", moduleName, prefix.string ( )));
 
   if (result != ModuleError::NONE) {
-    Log::error ("Failed to initialize module: %s", moduleName);
-    throw std::runtime_error ("Failed to initialize module.");
+    return format ("Failed to initialize module: {}", moduleName);
   }
 
   Log::info ("Successfully initialized: %s", moduleName);
