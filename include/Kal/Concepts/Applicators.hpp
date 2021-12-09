@@ -20,11 +20,11 @@
 #include "detail/zip.hpp"
 
 
-template<typename T> void swap (T& in, T& out) {
-  T temp = in;
-  in     = out;
-  out    = in;
-}
+// template<typename T> void swap (T& in, T& out) {
+//   T temp = in;
+//   in     = out;
+//   out    = in;
+// }
 
 template<typename T> T exchange (T& target, T& value) {
   T temp = target;
