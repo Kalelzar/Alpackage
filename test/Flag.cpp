@@ -19,7 +19,7 @@ RC_GTEST_PROP (Flag, IntFlagRead, (int val, int def)) {
   RC_PRE (def != val);
 
   Kal::Flag         flag ("Test");
-  Kal::FlagRef<int> flagvalqn
+  Kal::FlagRef<int> flagval
     = TRY_RC_ASSERT (flag.flag<int> ("test", def, "test"));
 
   auto res = TRY_RC_ASSERT (*flagval);
