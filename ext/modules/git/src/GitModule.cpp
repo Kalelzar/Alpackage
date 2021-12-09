@@ -17,6 +17,8 @@
 #include <stdexcept>
 #include <string>
 
+#include "Config.hpp"
+
 namespace Alpackage::Module {
 
 class GitModule : public IAlpackageModule {
@@ -42,14 +44,15 @@ class GitModule : public IAlpackageModule {
 
       Log::info ("Loading local gpkgs from $XDG_CONFIG_HOME/alpackage/gpkg/");
 
-      auto p = TRY (mapDirectoryFiles<std::vector<ConfLine>> (
-        XDG_CONFIG_HOME ( ) + "/alpackage/gpkg/",
-        [] (auto& t) -> ErrorOr<std::vector<ConfLine>> {
+      auto confhome = TRY (XDG_CONFIG_HOME ( ));
+      auto p        = TRY (mapDirectoryFiles<Config> (
+        confhome + "/alpackage/gpkg/",
+        [] (auto& t) -> ErrorOr<Config> {
           std::ifstream in (t.path ( ));
           auto          res = TRY (EntryReader<ConfLine>::parse (&in));
           in.close ( );
-          // TODO: Convert to Package.
-          return res;
+          auto ret = TRY (from (res));
+          return ret;
         }));
     }
     return ModuleError::NONE;

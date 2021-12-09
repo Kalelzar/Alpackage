@@ -36,12 +36,13 @@ class TextDbModule : public IAlpackageModule {
     Log::info ("Initializing module: %s", name ( ));
     {
       reckless::scoped_indent indent;
-      Option<std::string>     confdir
-        = findFirstFile (XDG_CONFIG_DIRS ( ), "alpackage/textdb.scsv");
-      if (!confdir) confdir = "textdb.scsv";
+      auto                    configdirs = TRY (XDG_CONFIG_DIRS ( ));
+      auto                    confdir
+        = TRY_OR_ELSE (findFirstFile (configdirs, "alpackage/textdb.scsv"),
+                       {"textdb.scsv"});
 
-      Log::info ("Loading config from '%s'", confdir.get ( ));
-      pkgs = TRY (readConfig (confdir.get ( )));
+      Log::info ("Loading config from '%s'", confdir);
+      pkgs = TRY (readConfig (confdir));
     }
     return ModuleError::NONE;
   };

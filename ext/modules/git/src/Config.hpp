@@ -2,11 +2,17 @@
 
 #include <Alpackage/Util/ConfLine.hpp>
 
+#include <Kal/ErrorOr.hpp>
+
 #include <string>
 
-struct Config {
+class Config {
+  public:
   std::string name, pin, description, remote, dir, build, install, version;
-  Config (Config&& c)
+  Config ( )      = default;
+  Config& operator= (Config const&) = default;
+  Config (Config const&)            = default;
+  Config (Config&& c) noexcept
       : name (std::move (c.name))
       , pin (std::move (c.pin))
       , description (std::move (c.description))
@@ -15,8 +21,9 @@ struct Config {
       , build (std::move (c.build))
       , install (std::move (c.install))
       , version (std::move (c.version)) { }
+
+  ~Config ( ) = default;
 };
 
-
-bool   validate (Config const&);
-Config from (std::vector<ConfLine> const&);
+bool            validate (Config const&);
+ErrorOr<Config> from (std::vector<ConfLine> const&);
