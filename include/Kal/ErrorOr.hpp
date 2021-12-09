@@ -1,7 +1,9 @@
 #pragma once
 
 #include <Kal/Concepts/Stream.hpp>
+#include <Kal/Concepts/detail/mkString.hpp>
 
+#include <Kal/Option.hpp>
 #include <Kal/default.hpp>
 
 #include <forward_list>
@@ -11,85 +13,71 @@
 
 #define TRY(FORM)                                                              \
   ({                                                                           \
-    auto result = (FORM);                                                      \
+    auto result = std::move (FORM);                                            \
     if (result.isEmpty ( )) { return result; }                                 \
-    result.get ( );                                                            \
-  })
-
-#define TRY_ASSERT(FORM)                                                       \
-  ({                                                                           \
-    auto result = (FORM);                                                      \
-    ASSERT_TRUE (result.isDefined ( ));                                        \
-    result.get ( );                                                            \
-  })
-
-#define TRY_RC_ASSERT(FORM)                                                    \
-  ({                                                                           \
-    auto result = (FORM);                                                      \
-    if (result.isEmpty ( )) { RC_FAIL (format ("{}", result)); }               \
     result.get ( );                                                            \
   })
 
 #define TRY_WITH(FORM, MSG)                                                    \
   ({                                                                           \
-    auto result = (FORM);                                                      \
+    auto result = std::move (FORM);                                            \
     if (result.isEmpty ( )) { return result.propagate (MSG); }                 \
+    result.get ( );                                                            \
+  })
+
+#define TRY_OR_ELSE(FORM, DEFAULT) (FORM).getOrElse (DEFAULT)
+
+
+#define TRY_ASSERT(FORM)                                                       \
+  ({                                                                           \
+    auto result = std::move (FORM);                                            \
+    ASSERT_TRUE (result.isDefined ( )) << result << std::endl;                 \
+    result.get ( );                                                            \
+  })
+
+#define TRY_RC_ASSERT(FORM)                                                    \
+  ({                                                                           \
+    auto result = std::move (FORM);                                            \
+    if (result.isEmpty ( )) { RC_FAIL (format ("{}", result)); }               \
     result.get ( );                                                            \
   })
 
 /**
  * @implements{OStreamable}
  */
-template<WithDefaultValue T> class ErrorOr {
-
+template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
   private:
-  T                              t;
+  Option<T>                      t;
   std::forward_list<std::string> errors;
-  bool                           defined;
   public:
-  ErrorOr (ErrorOr<T> const& other)
-      : t (other.t)
-      , errors (other.errors)
-      , defined (other.defined) { }
+  ErrorOr (ErrorOr const& other) : t (other.t), errors (other.errors) { }
+  ErrorOr (ErrorOr&& other) noexcept
+      : t (std::move (other.t))
+      , errors (std::move (other.errors)){ };
 
   template<typename U>
     requires (!Same<T, U>)
-  ErrorOr (ErrorOr<U> const& other)
-      : errors (other.getErrors ( ))
-      , defined (other.isDefined ( )) {
-    if (defined) {
+  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )), t ( ) {
+    if (t.isDefined ( )) {
       errors.push_front (
         "Attempt to propagate an ErrorOr with value of different type");
     }
   }
 
-  constexpr ErrorOr (std::string const& errorMsg) requires (!Ref<T>)
-    || ConstRef<T> : t (defaultValue<RemoveRef<T>>)
-      , defined (false) {
-    errors.push_front (errorMsg);
-  }
+  ErrorOr& operator= (ErrorOr const&) = delete;
+  ErrorOr& operator= (ErrorOr&&) = delete;
 
-  constexpr ErrorOr (std::string const& errorMsg) requires Ref<T> &&(
-    !ConstRef<T>)
-      : t (const_cast<T> (defaultValue<RemoveRef<T>>))
-      , defined (false) {
+  ErrorOr (std::string const& errorMsg) : t ( ) {
     errors.push_front (errorMsg);
   }
 
 
-  constexpr ErrorOr (std::string&& errorMsg) requires (!Ref<T>)
-    || ConstRef<T> : t (defaultValue<RemoveRef<T>>)
-      , defined (false) {
+  ErrorOr (std::string&& errorMsg) : t ( ) {
     errors.push_front (std::forward<std::string> (errorMsg));
   }
 
-  constexpr ErrorOr (std::string&& errorMsg) requires Ref<T> &&(!ConstRef<T>)
-      : t (const_cast<T> (defaultValue<RemoveRef<T>>))
-      , defined (false) {
-    errors.push_front (std::forward<std::string> (errorMsg));
-  }
-
-  constexpr ErrorOr (T t) : t (t), defined (true) { }
+  ErrorOr (T const& t) : t (t) { }
+  ErrorOr (T&& t) : t (std::move (t)) { }
 
   ErrorOr<T> propagate (std::string const& msg) {
     ErrorOr<T> next (*this);
@@ -97,68 +85,111 @@ template<WithDefaultValue T> class ErrorOr {
     return next;
   }
 
-  ErrorOr<T>& operator= (T ot) {
-    t       = ot;
-    defined = true;
-    return *this;
-  }
+  [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
+  [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
 
-  ErrorOr<T>& operator= (ErrorOr<T> const& ot) {
-    if (&ot != this) {
-      t       = ot.t;
-      defined = ot.defined;
-      errors  = ot.errors;
-    }
-    return *this;
-  }
-
-  [[nodiscard]] constexpr inline bool isEmpty ( ) const {
-    return !isDefined ( );
-  }
-  [[nodiscard]] constexpr inline bool isDefined ( ) const { return defined; }
-
-  [[nodiscard]] constexpr std::forward_list<std::string> const&
-    getErrors ( ) const {
+  [[nodiscard]] std::forward_list<std::string> const& getErrors ( ) const {
     return errors;
   }
 
-  constexpr inline T getOrElse (T def) const {
-    if (isDefined ( )) { return t; }
+  inline T getOrElse (T def) const {
+    if (isDefined ( )) { return t.get ( ); }
     return def;
   }
 
-  constexpr inline T getOrDefault ( ) const { return t; }
+  inline   operator bool ( ) const { return t.isDefined ( ); }
 
-  constexpr inline   operator bool ( ) const { return defined; }
-
-  constexpr inline T get ( ) const {
-    if (isDefined ( )) { return t; }
+  inline T get ( ) const {
+    if (isDefined ( )) { return t.get ( ); }
     exit (1);     // Unrecoverable.
-  }
-
-
-  friend std::ostream&
-    operator<< (std::ostream&     out,
-                ErrorOr<T> const& instance) requires OStreamable<T> {
-    if (instance.isDefined ( )) {
-      out << instance.t;
-    } else {
-      bool front = true;
-      for (auto it : instance.errors) {
-        if (front) {
-          out << "Error: " << it << std::endl;
-          front = false;
-        } else {
-          out << "\tCaused by: " << it << std::endl;
-        }
-      }
-    }
-    return out;
   }
 
 
   ~ErrorOr ( ) = default;
 };
 
-template<typename T>
-inline constexpr ErrorOr<T> defaultValue<ErrorOr<T>> = ErrorOr<T> ( );
+struct ErrorMsg {
+  std::string data;
+};
+
+/**
+ * @implements{OStreamable}
+ */
+template<> class ErrorOr<std::string> {
+  private:
+  Option<std::string>            t;
+  std::forward_list<std::string> errors;
+  public:
+  ErrorOr (ErrorOr const& other) = default;
+  ErrorOr (ErrorOr&& other) noexcept
+      : t (std::move (other.t))
+      , errors (std::move (other.errors)){ };
+
+
+  template<typename U>
+    requires (!Same<std::string, U>)
+  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )) {
+    if (t.isDefined ( )) {
+      errors.push_front (
+        "Attempt to propagate an ErrorOr with value of different type");
+    }
+  }
+
+  ErrorOr& operator= (ErrorOr const&) = delete;
+  ErrorOr& operator= (ErrorOr&&) = delete;
+
+  ErrorOr (ErrorMsg const& errorMsg) { errors.push_front (errorMsg.data); }
+
+
+  ErrorOr (ErrorMsg&& errorMsg) {
+    errors.push_front (std::move (errorMsg.data));
+  }
+
+  ErrorOr (std::string&& t) : t (std::move (t)) { }
+
+  ErrorOr<std::string> propagate (std::string const& msg) {
+    ErrorOr<std::string> next (*this);
+    next.errors.push_front (msg);
+    return next;
+  }
+
+  [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
+  [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
+
+  [[nodiscard]] std::forward_list<std::string> const& getErrors ( ) const {
+    return errors;
+  }
+
+  [[nodiscard]] inline std::string getOrElse (std::string def) const {
+    if (isDefined ( )) { return t.get ( ); }
+    return def;
+  }
+
+  inline operator bool ( ) const { return t.isDefined ( ); }
+
+  [[nodiscard]] inline std::string get ( ) const {
+    if (isDefined ( )) { return t.get ( ); }
+    exit (1);     // Unrecoverable.
+  }
+
+
+  ~ErrorOr ( ) = default;
+};
+
+template<OStreamable T>
+std::ostream& operator<< (std::ostream& out, ErrorOr<T> const& instance) {
+  if (instance.isDefined ( )) {
+    out << mkString (instance.get ( ));
+  } else {
+    bool front = true;
+    for (auto it : instance.getErrors ( )) {
+      if (front) {
+        out << "Error: " << it << std::endl;
+        front = false;
+      } else {
+        out << "\tCaused by: " << it << std::endl;
+      }
+    }
+  }
+  return out;
+}
