@@ -50,6 +50,25 @@ template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
   Option<T>                      t;
   std::forward_list<std::string> errors;
   public:
+  ErrorOr (Option<T> const& other) : t (other) {
+    if (other.isEmpty ( )) {
+      errors.push_front ("Constructed from empty option.");
+    }
+  };
+
+  ErrorOr (Option<T>&& other) : t (std::forward<Option<T>> (other)) {
+    if (t.isEmpty ( )) { errors.push_front ("Constructed from empty option."); }
+  };
+
+  template<typename U>
+    requires (!Same<T, U>)
+  ErrorOr (Option<U> const& other) : t (other) {
+    if (t.isDefined ( )) {
+      errors.push_front (
+        "Attempt to propagate an ErrorOr with value of different type");
+    }
+  }
+
   ErrorOr (ErrorOr const& other) : t (other.t), errors (other.errors) { }
   ErrorOr (ErrorOr&& other) noexcept
       : t (std::move (other.t))
@@ -103,6 +122,65 @@ template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
     if (isDefined ( )) { return t.get ( ); }
     exit (1);     // Unrecoverable.
   }
+
+
+  ~ErrorOr ( ) = default;
+};
+
+/**
+ * @implements{OStreamable}
+ */
+template<> class ErrorOr<void> {
+  private:
+  bool                           defined{false};
+  std::forward_list<std::string> errors;
+  public:
+  ErrorOr (ErrorOr const& other)
+      : defined (other.defined)
+      , errors (other.errors) { }
+  ErrorOr (ErrorOr&& other) noexcept
+      : defined (other.defined)
+      , errors (std::move (other.errors)){ };
+
+  template<typename U>
+    requires (!Same<void, U>)
+  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )) {
+    if (other.isDefined ( )) {
+      errors.push_front (
+        "Attempt to propagate an ErrorOr with value of different type");
+    }
+  }
+
+  ErrorOr& operator= (ErrorOr const&) = delete;
+  ErrorOr& operator= (ErrorOr&&) = delete;
+
+  ErrorOr (std::string const& errorMsg) { errors.push_front (errorMsg); }
+
+
+  ErrorOr (std::string&& errorMsg) {
+    errors.push_front (std::forward<std::string> (errorMsg));
+  }
+
+  ErrorOr ( ) : defined (true) { }
+
+  ErrorOr propagate (std::string const& msg) {
+    ErrorOr next (*this);
+    next.errors.push_front (msg);
+    return next;
+  }
+
+  [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
+  [[nodiscard]] inline bool isDefined ( ) const { return defined; }
+
+  [[nodiscard]] inline std::forward_list<std::string> const&
+    getErrors ( ) const {
+    return errors;
+  }
+
+  inline void get ( ) { }
+
+
+  inline      operator bool ( ) const { return defined; }
 
 
   ~ErrorOr ( ) = default;
