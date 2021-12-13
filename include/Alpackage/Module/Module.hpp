@@ -80,8 +80,12 @@ class BOOST_SYMBOL_VISIBLE IAlpackageModule {
   [[nodiscard]] virtual ModuleErrorOr<std::set<Package>>
     search (std::string const& query) const = 0;
   [[nodiscard]] virtual ModuleErrorOr<Package>
-                      find (std::string const& pkgName) const = 0;
-  virtual ModuleError install (std::string const& pkgName)    = 0;
+    find (std::string const& pkgName) const                           = 0;
+
+
+  [[nodiscard]] virtual ErrorOr<std::set<std::string>> hasUpdates ( ) = 0;
+
+  virtual ModuleError install (std::string const& pkgName)            = 0;
 
   virtual ModuleError install (Package const& pkg) {
     return install (pkg.name);

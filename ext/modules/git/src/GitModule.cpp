@@ -22,14 +22,13 @@
 namespace Alpackage::Module {
 
 class GitModule : public IAlpackageModule {
+  std::vector<Config> pkgs;
 
   public:
   [[nodiscard]] constexpr bool canSearch ( ) const override { return true; }
   [[nodiscard]] constexpr bool canFind ( ) const override { return true; }
   [[nodiscard]] constexpr bool canInstall ( ) const override { return true; }
-  [[nodiscard]] constexpr bool canList ( ) const override {
-    return true;
-  }     /// ???
+  [[nodiscard]] constexpr bool canList ( ) const override { return true; }
 
   [[nodiscard]] constexpr const char* version ( ) const override {
     return "1.0.0";
@@ -54,12 +53,49 @@ class GitModule : public IAlpackageModule {
           auto ret = TRY (from (res));
           return ret;
         }));
+
+      pkgs          = p;
     }
+
     return ModuleError::NONE;
   };
 
   [[nodiscard]] ModuleErrorOr<std::set<Package>> installed ( ) const override {
     return ModuleError::UNIMPLEMENTED;
+  };
+
+  [[nodiscard]] ErrorOr<std::set<std::string>> hasUpdates ( ) override {
+    auto res = map<std::string, Config> (pkgs, [] (Config& c) {
+      auto status = c.checkIfBehind ( );
+      if (status.isDefined ( )) {
+        auto aheadBehind = status.get ( );
+        if (aheadBehind.ahead == 0 && aheadBehind.behind == 0)
+          return format ("{}-{}: Is up-to-date.", c.name, c.version);
+        else if (aheadBehind.ahead == 0) {
+          return format ("{}-{}: Is {} commits behind origin.",
+                         c.name,
+                         c.version,
+                         aheadBehind.behind);
+        } else if (aheadBehind.behind == 0) {
+          return format ("{}-{}: Is {} commits ahead of origin.",
+                         c.name,
+                         c.version,
+                         aheadBehind.ahead);
+        }
+
+        return format ("{}-{}: Is {} commits ahead, {} behind origin.",
+                       c.name,
+                       c.version,
+                       aheadBehind.ahead,
+                       aheadBehind.behind);
+      }
+      return format ("Encountered error while checking '{}-{}': {}",
+                     c.name,
+                     c.version,
+                     status);
+    });
+
+    return std::set<std::string> (res.begin ( ), res.end ( ));
   };
 
   [[nodiscard]] ModuleErrorOr<std::set<Package>>

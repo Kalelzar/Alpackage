@@ -51,6 +51,10 @@ class TextDbModule : public IAlpackageModule {
     return pkgs;
   };
 
+  [[nodiscard]] ErrorOr<std::set<std::string>> hasUpdates ( ) override {
+    return format ("Unsupported operation.");
+  };
+
   [[nodiscard]] ModuleErrorOr<std::set<Package>>
     search (std::string const& query) const override {
     return ModuleError::UNSUPPORTED;
