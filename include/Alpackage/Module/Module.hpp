@@ -59,6 +59,7 @@ template<typename T> class ModuleErrorOr {
   }
   [[nodiscard]] ModuleError getError ( ) const { return error; }
   [[nodiscard]] bool isError ( ) const { return error != ModuleError::NONE; }
+  [[nodiscard]] bool isEmpty ( ) const { return isError; }
 };
 
 class BOOST_SYMBOL_VISIBLE IAlpackageModule {
