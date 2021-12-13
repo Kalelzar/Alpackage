@@ -89,45 +89,44 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
 
 
 template<IStreamable T, WithDefaultValue Container>
-  requires WithDefaultValue<T>
-class EntryReader<T, Container> {
-  private:
-  static ErrorOr<int> error ( ) {
+  requires WithDefaultValue<T> &&(!Entry<T>) class EntryReader<T, Container> {
+    private:
+    static ErrorOr<int> error ( ) {
 #ifdef __GNUC__
-    const std::type_info& ti     = typeid (T);
-    int                   status = 0;
-    auto*                 realname
-      = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
-    auto res = format ("Failed to read entry of type: {}", realname);
-    free (realname);
-    return res;
+      const std::type_info& ti     = typeid (T);
+      int                   status = 0;
+      auto*                 realname
+        = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
+      auto res = format ("Failed to read entry of type: {}", realname);
+      free (realname);
+      return res;
 #else
-    return format ("Failed to read entry of type: {}", typeid (T).name ( ));
+      return format ("Failed to read entry of type: {}", typeid (T).name ( ));
 #endif
-  }
-  public:
-  [[nodiscard]] static ErrorOr<Container> parse (std::istream* in) {
-    auto res = defaultValue<Container>;
+    }
+    public:
+    [[nodiscard]] static ErrorOr<Container> parse (std::istream* in) {
+      auto res = defaultValue<Container>;
 
-    while (!in->eof ( ) && in->peek ( ) != std::char_traits<char>::eof ( )) {
-      T e = defaultValue<T>;
-      try {
-        *in >> e;
-      } catch (std::runtime_error&) { return error ( ); }
-      if (in->fail ( )) { return error ( ); }
-      res.push_back (e);
+      while (!in->eof ( ) && in->peek ( ) != std::char_traits<char>::eof ( )) {
+        T e = defaultValue<T>;
+        try {
+          *in >> e;
+        } catch (std::runtime_error&) { return error ( ); }
+        if (in->fail ( )) { return error ( ); }
+        res.push_back (e);
+      }
+
+      return std::move (res);
     }
 
-    return std::move (res);
-  }
-
-  static ErrorOr<Container> parse (const std::string& path) {
-    std::ifstream file (path);
-    auto          result = parse (&file);
-    file.close ( );
-    if (result.isEmpty ( )) {
-      return result.propagate (format ("Failed to parse file: '{}'", path));
+    static ErrorOr<Container> parse (const std::string& path) {
+      std::ifstream file (path);
+      auto          result = parse (&file);
+      file.close ( );
+      if (result.isEmpty ( )) {
+        return result.propagate (format ("Failed to parse file: '{}'", path));
+      }
+      return result.get ( );
     }
-    return result.get ( );
-  }
-};
+  };
