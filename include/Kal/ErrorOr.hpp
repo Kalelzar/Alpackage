@@ -250,6 +250,23 @@ template<> class ErrorOr<std::string> {
     exit (1);     // Unrecoverable.
   }
 
+  std::ostream& operator<< (std::ostream& out) {
+    if (isDefined ( )) {
+      out << "<void>";
+    } else {
+      bool front = true;
+      for (auto it : getErrors ( )) {
+        if (front) {
+          out << "Error: " << it << std::endl;
+          front = false;
+        } else {
+          out << "\tCaused by: " << it << std::endl;
+        }
+      }
+    }
+    return out;
+  }
+
 
   ~ErrorOr ( ) = default;
 };
