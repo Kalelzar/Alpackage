@@ -89,10 +89,11 @@ class GitModule : public IAlpackageModule {
                        aheadBehind.ahead,
                        aheadBehind.behind);
       }
-      return format ("Encountered error while checking '{}-{}': {}",
-                     c.name,
-                     c.version,
-                     status);
+      return format (
+        "Encountered error while checking '{}-{}': \n\tCaused by: {}",
+        c.name,
+        c.version,
+        mkString (status.getErrors ( ), "\n\tCaused by: ", "", ""));
     });
 
     return std::set<std::string> (res.begin ( ), res.end ( ));
