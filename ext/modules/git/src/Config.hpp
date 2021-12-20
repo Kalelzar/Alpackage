@@ -114,19 +114,8 @@ class Config {
       clone_opts.fetch_opts.callbacks.credentials = cred_acquire_cb;
       Log::info ("Cloning repository '%s' to '%s'.", remote, dir);
       error = git_clone (&repo, remote.c_str ( ), dir.c_str ( ), &clone_opts);
-      if (error != 0) {
-        Log::warn ("Clone failed.");
-        const git_error* err = git_error_last ( );
-        if (err != nullptr) {
-          return format ("Failed to clone git repo '{}': ({}) {}",
-                         remote,
-                         err->klass,
-                         err->message);
-        }
-        return format ("Failed to clone git repo '{}': Error No. {}",
-                       remote,
-                       error);
-      }
+      TRY (handleGitError (error,
+                           format ("Failed to clone git repo '{}'", remote)));
       Log::info ("Clone succeeded.");
     } else {
       Log::info ("Repository '%s' already initialized. ", remote);
@@ -138,43 +127,53 @@ class Config {
     size_t ahead, behind;
   };
 
-  ErrorOr<AheadBehindResult> checkIfBehind ( ) {
-    if (!repo) TRY (setUpRepo ( ));
 
-
+  ErrorOr<void> fetchOrigin ( ) {
     int         errcode = 0;
-
     git_remote* remote;
     errcode = git_remote_lookup (&remote, repo, "origin");
 
-    if (errcode != 0) {
-      const auto* err = git_error_last ( );
-      if (err) {
-        return format ("Could not find remote 'origin': [{}] {}",
-                       err->klass,
-                       err->message);
-      }
-      return format ("Could not find remote 'origin': {}", errcode);
-    }
+    TRY (handleGitError (errcode, "Could not find remote 'origin'"));
 
     git_fetch_options fopts     = GIT_FETCH_OPTIONS_INIT;
     fopts.callbacks.credentials = cred_acquire_cb;
 
+    TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
 
-    git_remote_fetch (remote, nullptr, &fopts, "update");
+    git_remote_free (remote);
 
+    return { };
+  };
+
+  ErrorOr<AheadBehindResult> checkIfBehind ( ) {
+    if (!repo) TRY (setUpRepo ( ));
+
+    TRY (fetchOrigin ( ));
+    int            errcode = 0;
     git_object*    headObj;
     git_reference* headRef;
-    git_revparse_ext (&headObj, &headRef, repo, "HEAD");
+    errcode = git_revparse_ext (&headObj, &headRef, repo, "HEAD");
+
+    TRY (handleGitError (errcode, "Could not find revision 'HEAD'"));
+
+    git_reference_free (headRef);
+
+    const auto* headId = git_object_id (headObj);
+    git_object_free (headObj);
 
     git_object*    fheadObj;
     git_reference* fheadRef;
-    git_revparse_ext (&fheadObj, &fheadRef, repo, "FETCH_HEAD");
+    errcode = git_revparse_ext (&fheadObj, &fheadRef, repo, "FETCH_HEAD");
 
-    const auto*       headId  = git_object_id (headObj);
-    const auto*       fheadId = git_object_id (fheadObj);
+    TRY (handleGitError (errcode, "Could not find revision 'FETCH_HEAD'"));
 
-    AheadBehindResult res;
+    git_reference_free (fheadRef);
+
+    const auto* fheadId = git_object_id (fheadObj);
+    git_object_free (fheadObj);
+
+
+    AheadBehindResult res{ };
     git_graph_ahead_behind (&res.ahead, &res.behind, repo, headId, fheadId);
 
     return res;
@@ -184,28 +183,30 @@ class Config {
     git_status_options opts  = GIT_STATUS_OPTIONS_INIT;
     opts.show                = GIT_STATUS_SHOW_WORKDIR_ONLY;
     opts.flags               = GIT_STATUS_OPT_UPDATE_INDEX;
+
     git_status_list* out     = nullptr;
     int              errcode = 0;
-    if ((errcode = git_status_list_new (&out, repo, &opts)) != 0) {
-      const auto* err = git_error_last ( );
-      if (err) {
-        return format ("Git error while initializing Git status list: [{}] {}",
-                       err->klass,
-                       err->message);
-      }
-      return format (
-        "Failed to initialize Git status list with error code '{}'",
-        errcode);
-    }
 
-    if (!out) { return format ("Failed to initialize Git status list."); }
-
+    errcode                  = git_status_list_new (&out, repo, &opts);
+    TRY (handleGitError (errcode, "Failed to initialize Git status list"));
 
     bool res = git_status_list_entrycount (out) > 0;
 
-    if (out) { git_status_list_free (out); }
+    git_status_list_free (out);
 
     return res;
+  }
+
+  ErrorOr<void> handleGitError (int errcode, std::string const& message) const {
+    if (errcode != 0) {
+      const auto* err = git_error_last ( );
+      if (err) {
+        ErrorOr<void> ret (format ("[{}] {}", err->klass, err->message));
+        return ret.propagate (message);
+      }
+      return format ("{}: {}", message, errcode);
+    }
+    return { };
   }
 
   ~Config ( ) {
