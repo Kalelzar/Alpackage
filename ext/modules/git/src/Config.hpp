@@ -16,6 +16,7 @@
 #include <git2/types.h>
 #include <string>
 
+#include "SSHKeys.hpp"
 #include "Shell.hpp"
 
 #define UNUSED(x)
@@ -127,6 +128,13 @@ class Config {
     size_t ahead, behind;
   };
 
+  struct fetchPayload {
+    bool             triedSSHAgent        = false;
+    bool             triedSSHPasswordless = false;
+    uint8_t          triedSSHWithPassword = 0;
+    uint8_t          triedUserpass        = 0;
+    SSHKeyIterator<> keys                 = makeSSHKeyIterator ( );
+  };
 
   ErrorOr<void> fetchOrigin ( ) {
     int         errcode = 0;
@@ -137,6 +145,19 @@ class Config {
 
     git_fetch_options fopts     = GIT_FETCH_OPTIONS_INIT;
     fopts.callbacks.credentials = cred_acquire_cb;
+    fopts.callbacks.payload     = malloc (sizeof (fetchPayload));
+    new ((fetchPayload*) fopts.callbacks.payload) fetchPayload ( );
+
+    bool retry = true;
+    while (retry) {
+      errcode = git_remote_fetch (remote, nullptr, &fopts, "update");
+      switch (errcode) {
+        case -1: break;
+        default: retry = false; break;
+      }
+    }
+
+    free (fopts.callbacks.payload);
 
     TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
 
