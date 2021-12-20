@@ -16,7 +16,7 @@ template<Iterable    T,
                                                         After const&  after = " ]") {
   std::stringstream s;
   s << before;
-  for (auto it = t.begin ( ); it != t.end ( ); ++it) {
+  for (auto it = begin (t); it != end (t); ++it) {
     s << *it;
     if (std::next (it) != t.end ( )) s << delim;
   }
@@ -35,12 +35,12 @@ inline std::string mkString (T const&      t,
                              After const&  after  = " ]") {
   std::stringstream s;
   s << before;
-  auto it = t.cbegin ( );
-  if (it != t.cend ( )) {
+  auto it = cbegin (t);
+  if (it != cend (t)) {
     s << *it;
     ++it;
   }
-  for (; it != t.cend ( ); ++it) { s << delim << *it; }
+  for (; it != cend (t); ++it) { s << delim << *it; }
   s << after;
   return std::move (s.str ( ));
 }

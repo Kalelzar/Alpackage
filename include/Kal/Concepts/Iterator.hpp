@@ -2,6 +2,8 @@
 
 #include <Kal/Concepts/Type.hpp>
 
+#include <iterator>
+
 ///@defgroup IteratorConcepts Iterator Concepts
 
 /** @defgroup IteratorPair Iterator Pair
@@ -42,7 +44,7 @@ concept IteratorPair = requires (Begin begin, End end) {
  */
 template<typename T>
 concept Iterable = requires (T t) {
-  { t.begin ( ) } -> IteratorPair<decltype (t.end ( ))>;
+  { begin (t) } -> IteratorPair<decltype (end (t))>;
 };
 
 /** @defgroup ConstIterable Const Iterable
@@ -60,7 +62,7 @@ concept Iterable = requires (T t) {
  */
 template<typename T>
 concept ConstIterable = requires (T t) {
-  { t.cbegin ( ) } -> IteratorPair<decltype (t.cend ( ))>;
+  { cbegin (t) } -> IteratorPair<decltype (cend (t))>;
 };
 
 /** @defgroup AnyIterable Any Iterable
@@ -75,6 +77,35 @@ concept ConstIterable = requires (T t) {
  */
 template<typename T>
 concept AnyIterable = ConstIterable<T> || Iterable<T>;
+
+template<typename T> struct IteratesWith;
+
+template<typename T>
+  requires Iterable<T> && ConstIterable<T>
+struct IteratesWith<T> {
+  private:
+  T t;
+  public:
+  using type = typename std::iterator_traits<decltype (begin (t))>::value_type;
+  using ctype =
+    typename std::iterator_traits<decltype (cbegin (t))>::value_type;
+};
+
+template<Iterable T> struct IteratesWith<T> {
+  private:
+  T t;
+  public:
+  using type = typename std::iterator_traits<decltype (begin (t))>::value_type;
+};
+
+
+template<ConstIterable T> struct IteratesWith<T> {
+  private:
+  T t;
+  public:
+  using ctype =
+    typename std::iterator_traits<decltype (cbegin (t))>::value_type;
+};
 
 /** @defgroup IterableWith IterableWith
  * @ingroup IteratorConcepts
@@ -93,47 +124,16 @@ concept AnyIterable = ConstIterable<T> || Iterable<T>;
  *
  */
 template<typename T, typename U>
-concept IterableWith = Iterable<T> && requires (T t) {
-  { *t.begin ( ) } -> Same<U&>;
-};
+concept IterableWith = Iterable<T> && Same<typename IteratesWith<T>::type, U>;
 
 template<typename T, typename U>
-concept IterableWithConst = (NotConst<U> && Iterable<T> && requires (T t) {
-  { *t.begin ( ) } -> SameCVR<U>;
-});
+concept IterableWithConst
+  = Iterable<T> && SameCVR<typename IteratesWith<T>::type, U>;
 
 template<typename T, typename U>
-concept ConstIterableWith = (ConstIterable<T> && requires (T t) {
-  { *t.cbegin ( ) } -> SameCVR<U>;
-});
+concept ConstIterableWith
+  = ConstIterable<T> && SameCVR<typename IteratesWith<T>::type, U>;
 
 template<typename T, typename U>
 concept AnyIterableWith
   = ConstIterableWith<T, U> || IterableWithConst<T, U> || IterableWith<T, U>;
-
-template<typename T> struct IteratesWith;
-
-template<typename T>
-  requires Iterable<T> && ConstIterable<T>
-struct IteratesWith<T> {
-  private:
-  T t;
-  public:
-  using type  = decltype (*t.begin ( ));
-  using ctype = decltype (*t.cbegin ( ));
-};
-
-template<Iterable T> struct IteratesWith<T> {
-  private:
-  T t;
-  public:
-  using type = decltype (*t.begin ( ));
-};
-
-
-template<ConstIterable T> struct IteratesWith<T> {
-  private:
-  T t;
-  public:
-  using type = decltype (*t.cbegin ( ));
-};
