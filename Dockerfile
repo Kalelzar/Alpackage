@@ -27,4 +27,4 @@ RUN pacman --noconfirm -S gcovr
 RUN git clone "https://github.com/Kalelzar/Alpackage.git" /test --recurse-submodules
 WORKDIR /test
 
-CMD make clean install testAll clean
+CMD git pull && make clean install testAll
