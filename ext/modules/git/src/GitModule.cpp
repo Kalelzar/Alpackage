@@ -18,11 +18,12 @@
 #include <string>
 
 #include "Config.hpp"
+#include "GitRepo.hpp"
 
 namespace Alpackage::Module {
 
 class GitModule : public IAlpackageModule {
-  std::vector<Config> pkgs;
+  std::vector<GitRepo> pkgs;
 
   public:
   [[nodiscard]] constexpr bool canSearch ( ) const override { return true; }
@@ -41,20 +42,32 @@ class GitModule : public IAlpackageModule {
     {
       reckless::scoped_indent indent;
 
-      Log::info ("Loading local gpkgs from $XDG_CONFIG_HOME/alpackage/gpkg/");
+      Log::info ("Loading config from $XDG_CONFIG_HOME/alpackage/git.conf");
 
       auto confhome = TRY (XDG_CONFIG_HOME ( ));
-      auto p        = TRY (mapDirectoryFiles<Config> (
+
+      auto confLocation
+        = TRY (findFileAt (confhome + "/alpackage", "git.conf"));
+
+      std::ifstream in (confLocation);
+      auto          confLines = TRY (EntryReader<ConfLine>::parse (&in));
+      in.close ( );
+      auto conf = TRY (Config::from (confLines));
+
+
+      Log::info ("Loading local gpkgs from $XDG_CONFIG_HOME/alpackage/gpkg/");
+
+      auto p = TRY (mapDirectoryFiles<GitRepo> (
         confhome + "/alpackage/gpkg/",
-        [] (auto& t) -> ErrorOr<Config> {
+        [&conf] (auto& t) -> ErrorOr<GitRepo> {
           std::ifstream in (t.path ( ));
           auto          res = TRY (EntryReader<ConfLine>::parse (&in));
           in.close ( );
-          auto ret = TRY (from (res));
+          auto ret = TRY (from (res, conf));
           return ret;
         }));
 
-      pkgs          = p;
+      pkgs   = p;
     }
 
     return ModuleError::NONE;
@@ -65,7 +78,7 @@ class GitModule : public IAlpackageModule {
   };
 
   [[nodiscard]] ErrorOr<std::set<std::string>> hasUpdates ( ) override {
-    auto res = map<std::string, Config> (pkgs, [] (Config& c) {
+    auto res = map<std::string, GitRepo> (pkgs, [] (GitRepo& c) {
       auto status = c.checkIfBehind ( );
       if (status.isDefined ( )) {
         auto aheadBehind = status.get ( );
