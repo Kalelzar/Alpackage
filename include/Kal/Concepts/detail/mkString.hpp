@@ -16,9 +16,9 @@ template<Iterable    T,
                                                         After const&  after = " ]") {
   std::stringstream s;
   s << before;
-  for (auto it = begin (t); it != end (t); ++it) {
+  for (auto& it = begin (t); it != end (t); ++it) {
     s << *it;
-    if (std::next (it) != t.end ( )) s << delim;
+    if (std::next (it) != end (t)) s << delim;
   }
   s << after;
   return std::move (s.str ( ));
