@@ -4,6 +4,7 @@
 
 #include <Kal/ErrorOr.hpp>
 
+#include <git2/oidarray.h>
 #include <git2/repository.h>
 #include <string>
 
@@ -30,10 +31,6 @@ class GitRepo {
       , install (std::move (c.install))
       , version (std::move (c.version)) { }
 
-  struct AheadBehindResult {
-    size_t ahead, behind;
-  };
-
   struct fetchPayload {
     bool             triedSSHAgent        = false;
     bool             triedSSHPasswordless = false;
@@ -45,13 +42,68 @@ class GitRepo {
     SSHKeyIterator<> keys                 = makeSSHKeyIterator ( );
   };
 
-  ErrorOr<void> handleGitError (int errcode, std::string const& message) const;
-  ErrorOr<void> buildPkg ( );
-  ErrorOr<void> installPkg ( );
-  ErrorOr<void> setUpRepo ( );
-  ErrorOr<void> fetchOrigin ( );
-  ErrorOr<bool> modified ( );
-  ErrorOr<AheadBehindResult> checkIfBehind ( );
+  struct MergeStatus {
+    enum Kind { FAST_FORWARD, MANUAL_MERGE, NONE, UNDEFINED = -1 };
+
+    Kind     status;
+    git_oid* oid;
+
+    MergeStatus ( ) : status (Kind::UNDEFINED), oid (nullptr) { }
+
+    MergeStatus (Kind status, git_oid* oid)
+        : status (status)
+        , oid ((git_oid*) malloc (sizeof (git_oid))) {
+      memcpy (this->oid, oid, sizeof (git_oid));
+    }
+
+    MergeStatus (MergeStatus const& other) : status (other.status) {
+      if (&other != this) {
+        oid = (git_oid*) malloc (sizeof (git_oid));
+        memcpy (oid, other.oid, sizeof (git_oid));
+      }
+    };
+
+    MergeStatus& operator= (MergeStatus const& other) {
+      if (&other != this) {
+        status = other.status;
+        if (oid == nullptr) { oid = (git_oid*) malloc (sizeof (git_oid)); }
+        memcpy (oid, other.oid, sizeof (git_oid));
+      }
+      return *this;
+    };
+
+    MergeStatus (MergeStatus&& other) noexcept
+        : status (other.status)
+        , oid (other.oid) {
+      if (&other != this) { other.oid = nullptr; }
+    }
+    MergeStatus& operator= (MergeStatus&& other) noexcept {
+      if (&other != this) {
+        status = other.status;
+        if (oid) free (oid);
+        oid       = other.oid;
+        other.oid = nullptr;
+      }
+      return *this;
+    };
+
+    ~MergeStatus ( ) { free (oid); }
+  };
+
+  struct AheadBehindResult {
+    size_t      ahead, behind;
+    MergeStatus mergeStatus;
+  };
+
+  [[nodiscard]] ErrorOr<void>              handleGitError (int                errcode,
+                                                           std::string const& message) const;
+  [[nodiscard]] ErrorOr<void>              buildPkg ( );
+  [[nodiscard]] ErrorOr<void>              installPkg ( );
+  [[nodiscard]] ErrorOr<void>              setUpRepo ( );
+  [[nodiscard]] ErrorOr<void>              fetchOrigin ( );
+  [[nodiscard]] ErrorOr<bool>              modified ( );
+  [[nodiscard]] ErrorOr<AheadBehindResult> checkIfBehind ( );
+  [[nodiscard]] ErrorOr<MergeStatus>       mergeStatus ( );
 
   ~GitRepo ( ) {
     if (repo) { git_repository_free (repo); }

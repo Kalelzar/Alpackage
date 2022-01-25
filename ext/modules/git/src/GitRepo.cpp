@@ -7,11 +7,15 @@
 #include <cstdio>
 #include <cstring>
 #include <git2.h>
+#include <git2/annotated_commit.h>
+#include <git2/blob.h>
 #include <git2/graph.h>
+#include <git2/merge.h>
 #include <git2/remote.h>
 #include <git2/revparse.h>
 #include <git2/status.h>
 #include <git2/types.h>
+#include <type_traits>
 
 #include "GitRepo.hpp"
 #include "Shell.hpp"
@@ -310,6 +314,7 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
 ErrorOr<GitRepo::AheadBehindResult> GitRepo::checkIfBehind ( ) {
   if (!repo) TRY (setUpRepo ( ));
 
+  // FIXME: Figure out a way to avoid doing this fetch on every check.
   TRY (fetchOrigin ( ));
   int            errcode = 0;
   git_object*    headObj;
@@ -336,10 +341,86 @@ ErrorOr<GitRepo::AheadBehindResult> GitRepo::checkIfBehind ( ) {
 
 
   AheadBehindResult res{ };
-  git_graph_ahead_behind (&res.ahead, &res.behind, repo, headId, fheadId);
+
+  res.mergeStatus = std::move (TRY (mergeStatus ( )));
+  if (res.mergeStatus.status != MergeStatus::Kind::NONE)
+    git_graph_ahead_behind (&res.ahead, &res.behind, repo, headId, fheadId);
+  else {
+    res.ahead  = 0;
+    res.behind = 0;
+  };
+
 
   return res;
 }
+
+namespace {
+struct OIDPayload {
+  git_oid* data;
+  bool     status = false;
+};
+}     // namespace
+
+static int collectOIDFromFetchHead (const char*    ref_name,
+                                    const char*    remote_url,
+                                    const git_oid* oid,
+                                    unsigned int   is_merge,
+                                    void*          payload) {
+  if (is_merge) {
+    // printf ("Name: %s\nRemote: %s\nMerge? %u\n",
+    //         ref_name,
+    //         remote_url,
+    //         is_merge);
+    memcpy (((OIDPayload*) payload)->data, oid, sizeof (git_oid));
+    ((OIDPayload*) payload)->status = true;
+  }
+  return 0;
+}
+
+ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
+  int        error   = 0;
+  auto*      oid     = (git_oid*) malloc (sizeof (git_oid));
+  OIDPayload payload = {oid, false};
+  error              = git_repository_fetchhead_foreach (repo,
+                                            collectOIDFromFetchHead,
+                                            &payload);
+  TRY (handleGitError (error, "Failed to find merge OID from FETCH_HEAD."));
+
+  if (!payload.status) {
+    return format ("Failed to find suitable merge OID from FETCH_HEAD");
+  }
+
+  git_annotated_commit* commit = nullptr;
+  error = git_annotated_commit_lookup (&commit, repo, oid);
+  TRY (handleGitError (
+    error,
+    format ("Failed to look up annotated commit for {}", name)));
+
+  git_merge_analysis_t        analysis_result;
+  git_merge_preference_t      pref  = GIT_MERGE_PREFERENCE_NONE;
+
+  const git_annotated_commit* buf[] = {commit};
+
+  error = git_merge_analysis (&analysis_result, &pref, repo, buf, 1);
+  TRY (handleGitError (error, "Failed to run merge analysis."));
+
+  git_annotated_commit_free (commit);
+  if (analysis_result & GIT_MERGE_ANALYSIS_FASTFORWARD) {
+    return MergeStatus (MergeStatus::Kind::FAST_FORWARD, oid);
+  }
+  if (analysis_result & GIT_MERGE_ANALYSIS_UP_TO_DATE) {
+    return MergeStatus (MergeStatus::Kind::NONE, oid);
+  }
+  if (analysis_result & GIT_MERGE_ANALYSIS_NORMAL) {
+    return MergeStatus (MergeStatus::Kind::MANUAL_MERGE, oid);
+  }
+  if (analysis_result & GIT_MERGE_ANALYSIS_NONE
+      || analysis_result & GIT_MERGE_ANALYSIS_UNBORN) {
+    return format ("Invalid result from merge analysis for {}", name);
+  }
+  return format ("Wot? This should not be reachable.: {}", analysis_result);
+}
+
 
 ErrorOr<bool> GitRepo::modified ( ) {
   git_status_options opts  = GIT_STATUS_OPTIONS_INIT;

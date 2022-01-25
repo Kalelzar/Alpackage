@@ -81,26 +81,46 @@ class GitModule : public IAlpackageModule {
     auto res = map<std::string, GitRepo> (pkgs, [] (GitRepo& c) {
       auto status = c.checkIfBehind ( );
       if (status.isDefined ( )) {
-        auto aheadBehind = status.get ( );
-        if (aheadBehind.ahead == 0 && aheadBehind.behind == 0)
-          return format ("{}-{}: Is up-to-date.", c.name, c.version);
-        else if (aheadBehind.ahead == 0) {
-          return format ("{}-{}: Is {} commits behind origin.",
-                         c.name,
-                         c.version,
-                         aheadBehind.behind);
-        } else if (aheadBehind.behind == 0) {
-          return format ("{}-{}: Is {} commits ahead of origin.",
-                         c.name,
-                         c.version,
-                         aheadBehind.ahead);
+        auto        aheadBehind = status.get ( );
+
+        std::string mergeStatusString;
+        switch (aheadBehind.mergeStatus.status) {
+          case GitRepo::MergeStatus::Kind::FAST_FORWARD:
+            mergeStatusString = "Can fast-forward.";
+            break;
+          case GitRepo::MergeStatus::Kind::MANUAL_MERGE:
+            mergeStatusString = "Needs to be manually merged.";
+            break;
+          case GitRepo::MergeStatus::Kind::NONE: mergeStatusString = ""; break;
+          case GitRepo::MergeStatus::Kind::UNDEFINED:
+            return format ("{}-{}: Invalid merge status.", c.name, c.version);
         }
 
-        return format ("{}-{}: Is {} commits ahead, {} behind origin.",
+        if (aheadBehind.ahead == 0 && aheadBehind.behind == 0)
+          return format ("{}-{}: Is up-to-date. {}",
+                         c.name,
+                         c.version,
+                         mergeStatusString);
+        else if (aheadBehind.ahead == 0) {
+          return format ("{}-{}: Is {} commits behind origin. {}",
+                         c.name,
+                         c.version,
+                         aheadBehind.behind,
+                         mergeStatusString);
+        } else if (aheadBehind.behind == 0) {
+          return format ("{}-{}: Is {} commits ahead of origin. {}",
+                         c.name,
+                         c.version,
+                         aheadBehind.ahead,
+                         mergeStatusString);
+        }
+
+        return format ("{}-{}: Is {} commits ahead, {} behind origin. {}",
                        c.name,
                        c.version,
                        aheadBehind.ahead,
-                       aheadBehind.behind);
+                       aheadBehind.behind,
+                       mergeStatusString);
       }
       return format (
         "Encountered error while checking '{}-{}': \n\tCaused by: {}",
