@@ -1,11 +1,11 @@
 #pragma once
 
+#include <Kal/Format.hpp>
 #include <Kal/Iterators/KeepIterator.hpp>
 #include <Kal/Iterators/MergeIterator.hpp>
 
 #include <cstdio>
 #include <filesystem>
-
 
 template<IterableWith<const std::filesystem::directory_entry>... T>
 using SSHKeyMergeIterator
