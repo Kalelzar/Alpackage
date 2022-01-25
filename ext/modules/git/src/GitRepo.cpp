@@ -2,6 +2,7 @@
 #include <Alpackage/Util/Logging.hpp>
 
 #include <Kal/Format.hpp>
+#include <Kal/FreeLater.hpp>
 
 #include <cstdio>
 #include <cstring>
@@ -52,10 +53,14 @@ ErrorOr<GitRepo> from (std::vector<ConfLine> const& lines, Config const& conf) {
 #define UNUSED(x)
 
 static int readline (char** out) {
-  int   c, error = 0, length = 0, allocated = 0;
-  char* line = NULL;
+  int       c         = 0;
+  int       error     = 0;
+  int       length    = 0;
+  int       allocated = 0;
+  char*     line      = nullptr;
+  FreeLater lineGuard ((void**) &line);
 
-  errno      = 0;
+  errno = 0;
 
   while ((c = getchar ( )) != EOF) {
     if (length == allocated) {
@@ -63,7 +68,7 @@ static int readline (char** out) {
 
       if ((line = (char*) realloc (line, allocated)) == NULL) {
         error = -1;
-        goto error;
+        return error;
       }
     }
 
@@ -74,15 +79,14 @@ static int readline (char** out) {
 
   if (errno != 0) {
     error = -1;
-    goto error;
+    return error;
   }
 
   line[length] = '\0';
   *out         = line;
-  line         = NULL;
-  error        = length;
-error:
-  free (line);
+  lineGuard.release ( );
+  error = length;
+
   return error;
 }
 
@@ -103,83 +107,101 @@ int cred_acquire_cb (git_credential** out,
                      const char*      username_from_url,
                      unsigned int     allowed_types,
                      void*            _payload) {
-  char* username = nullptr;
-  char* password = nullptr;
-  char* privkey  = nullptr;
-  char* pubkey   = nullptr;
-  int   error    = 1;
+  int error = 1;
 
   UNUSED (url);
-  auto* payload = (GitRepo::fetchPayload*) _payload;
+  auto*     payload  = (GitRepo::fetchPayload*) _payload;
 
+  char*     username = nullptr;
+  FreeLater usernameGuard ((void**) &username);
   if (username_from_url != nullptr) {
-    if ((username = strdup (username_from_url)) == nullptr) { goto out; }
+    if ((username = strdup (username_from_url)) == nullptr) { return error; }
   } else if ((error = ask (&username, "Username: ", 0)) < 0) {
-    goto out;
+    return error;
   }
 
-  if ((allowed_types & GIT_CREDENTIAL_SSH_KEY) != 0u) {
-    if (!payload->usedSSH) payload->usedSSH = true;
+  if ((allowed_types & GIT_CREDENTIAL_SSH_KEY) != 0U) {
+    if (!payload->usedSSH) { payload->usedSSH = true; }
     if (!payload->triedSSHAgent) {
       error = git_credential_ssh_key_from_agent (out, username);
       payload->triedSSHAgent = true;
-      goto out;
+      return error;
     }
 
+    char*     privkey = nullptr;
+    FreeLater privkeyGuard ((void**) &privkey);
 
-    int n;
-    if (payload->triedDefaultKey) payload->defaultKey == nullptr;
+    char*     pubkey = nullptr;
+    FreeLater pubkeyGuard ((void**) &pubkey);
+    if (payload->triedDefaultKey) { payload->defaultKey = nullptr; }
     if (payload->defaultKey != nullptr && !payload->triedDefaultKey) {
       pubkey = strdup ((payload->defaultKey));
-      if (pubkey == nullptr) goto out;
-      n       = strlen (pubkey) - 4;
-      privkey = (char*) malloc (n + 1);
-      if (privkey == nullptr) goto out;
+
+      if (pubkey == nullptr) { return error; }
+
+      size_t n = strlen (pubkey) - 4;
+
+      privkey  = (char*) malloc (n + 1);
+
+      if (privkey == nullptr) { return error; }
       strncpy (privkey, pubkey, n);
       privkey[n]               = '\0';
       payload->triedDefaultKey = true;
       error = git_credential_ssh_key_new (out, username, pubkey, privkey, "");
-      goto out;
-    } else if (payload->keys.atEnd ( )) {
-      if ((error = ask (&privkey, "SSH Key:", 0)) < 0) goto out;
+      return error;
+    }
+
+    if (payload->keys.atEnd ( )) {
+      size_t n = 0;
+      if ((error = ask (&privkey, "SSH Key:", 0)) < 0) { return error; }
+
       if ((n = snprintf (nullptr, 0, "%s.pub", privkey)) < 0
           || (pubkey = (char*) malloc (n + 1)) == nullptr
-          || (n = snprintf (pubkey, n + 1, "%s.pub", privkey)) < 0)
-        goto out;
+          || (n = snprintf (pubkey, n + 1, "%s.pub", privkey)) < 0) {
+        return error;
+      }
+
     } else if (!payload->triedSSHPasswordless) {
       ++(payload->keys);
       if (payload->keys.atEnd ( )) {
         payload->triedSSHPasswordless = true;
         payload->keys.reset ( );
-        goto out;
+        return error;
       }
       pubkey = strdup ((*payload->keys).path ( ).c_str ( ));
-      if (pubkey == nullptr) goto out;
-      n       = strlen (pubkey) - 4;
-      privkey = (char*) malloc (n + 1);
-      if (privkey == nullptr) goto out;
+
+      if (pubkey == nullptr) { return error; }
+
+      size_t n = strlen (pubkey) - 4;
+      privkey  = (char*) malloc (n + 1);
+
+      if (privkey == nullptr) { return error; }
       strncpy (privkey, pubkey, n);
       privkey[n] = '\0';
 
       error = git_credential_ssh_key_new (out, username, pubkey, privkey, "");
-      goto out;
+      return error;
     } else {
       if (payload->triedSSHWithPassword >= 3) {
         payload->triedSSHWithPassword = 0;
         ++(payload->keys);
       }
+
+
       pubkey = strdup ((*payload->keys).path ( ).c_str ( ));
-      if (pubkey == nullptr) goto out;
-      n       = strlen (pubkey) - 4;
-      privkey = (char*) malloc (n + 1);
-      if (privkey == nullptr) goto out;
+      if (pubkey == nullptr) { return error; }
+      size_t n = strlen (pubkey) - 4;
+      privkey  = (char*) malloc (n + 1);
+      if (privkey == nullptr) { return error; }
       strncpy (privkey, pubkey, n);
       privkey[n] = '\0';
     }
 
-    if (payload->triedSSHWithPassword >= 3) { goto out; }
+    if (payload->triedSSHWithPassword >= 3) { return error; }
 
-    if ((error = ask (&password, "Password:", 0)) < 0) goto out;
+    char*     password = nullptr;
+    FreeLater passwordGuard ((void**) &password);
+    if ((error = ask (&password, "Password:", 0)) < 0) { return error; }
 
     error
       = git_credential_ssh_key_new (out, username, pubkey, privkey, password);
@@ -187,35 +209,33 @@ int cred_acquire_cb (git_credential** out,
     payload->triedSSHWithPassword++;
 
   } else if ((allowed_types & GIT_CREDENTIAL_USERPASS_PLAINTEXT) != 0U) {
-    if ((error = ask (&password, "Password:", 1)) < 0) goto out;
+    char*     password = nullptr;
+    FreeLater passwordGuard ((void**) &password);
+    if ((error = ask (&password, "Password:", 1)) < 0) { return error; }
 
     error = git_credential_userpass_plaintext_new (out, username, password);
   } else if ((allowed_types & GIT_CREDENTIAL_USERNAME) != 0U) {
     error = git_credential_username_new (out, username);
   }
 
-out:
-  free (username);
-  free (password);
-  free (privkey);
-  free (pubkey);
   return error;
 }
 
 
 ErrorOr<void> GitRepo::buildPkg ( ) {
-  if (!repo) TRY (setUpRepo ( ));
-  if (build.empty ( )) return { };
+  if (!repo) { TRY (setUpRepo ( )); }
+  if (build.empty ( )) { return { }; }
   return executeShellCommand (build, dir);
 }
 
 ErrorOr<void> GitRepo::installPkg ( ) {
   // Does this always need to rebuild?
   TRY (buildPkg ( ));
-  if (install.empty ( ))
+  if (install.empty ( )) {
     return format ("No command provided to install '{}-{}' with.",
                    name,
                    version);
+  }
   return executeShellCommand (install, dir);
 }
 
@@ -257,7 +277,8 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
     }
   }
 
-  auto* payload = ((fetchPayload*) fopts.callbacks.payload);
+  auto*     payload = ((fetchPayload*) fopts.callbacks.payload);
+  FreeLater payloadGuard ((void**) &payload);
 
   if (payload->usedSSH) {
     const char* pubkey = nullptr;
@@ -269,17 +290,15 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
       pubkey = (*payload->keys).path ( ).c_str ( );
     }
 
-    size_t n       = strlen (pubkey) - 4;
-    char*  privkey = (char*) malloc (n + 1);
+    size_t    n       = strlen (pubkey) - 4;
+    char*     privkey = (char*) malloc (n + 1);
+    FreeLater privKeyGuard ((void**) &privkey);
     strncpy (privkey, pubkey, n);
     privkey[n] = '\0';
     printf ("Authenticated to '%s' with ssh key '%s'.\n",
             remote.c_str ( ),
             privkey);
-    free (privkey);
   }
-
-  free (fopts.callbacks.payload);
 
   TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
 
@@ -339,6 +358,7 @@ ErrorOr<bool> GitRepo::modified ( ) {
 
   return res;
 }
+
 
 ErrorOr<void> GitRepo::handleGitError (int                errcode,
                                        std::string const& message) const {
