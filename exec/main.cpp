@@ -23,7 +23,7 @@ ErrorOr<int> kalmain (int argc, char** argv) {
   auto git = TRY (Alpackage::Module::ModuleLoader::getModule ("AlpackageGit"));
 
   std::cout << "Checking git packages status:" << std::endl
-            << mkString (TRY (git->hasUpdates ( )), '\n');
+            << mkString (TRY (git->hasUpdates ( )), '\n', "", "\n");
 
   return 0;
 }
