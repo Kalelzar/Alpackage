@@ -387,7 +387,8 @@ ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
   TRY (handleGitError (error, "Failed to find merge OID from FETCH_HEAD."));
 
   if (!payload.status) {
-    return format ("Failed to find suitable merge OID from FETCH_HEAD");
+    // HACK:??? Assume that a missing mergeable ref means we are up-to-date.
+    return MergeStatus (MergeStatus::Kind::NONE);
   }
 
   git_annotated_commit* commit = nullptr;

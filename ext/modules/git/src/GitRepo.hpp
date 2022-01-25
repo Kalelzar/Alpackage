@@ -50,6 +50,8 @@ class GitRepo {
 
     MergeStatus ( ) : status (Kind::UNDEFINED), oid (nullptr) { }
 
+    explicit MergeStatus (Kind status) : status (status), oid (nullptr) { }
+
     MergeStatus (Kind status, git_oid* oid)
         : status (status)
         , oid ((git_oid*) malloc (sizeof (git_oid))) {
@@ -58,8 +60,12 @@ class GitRepo {
 
     MergeStatus (MergeStatus const& other) : status (other.status) {
       if (&other != this) {
-        oid = (git_oid*) malloc (sizeof (git_oid));
-        memcpy (oid, other.oid, sizeof (git_oid));
+        if (other.oid) {
+          oid = (git_oid*) malloc (sizeof (git_oid));
+          memcpy (oid, other.oid, sizeof (git_oid));
+        } else {
+          oid = nullptr;
+        }
       }
     };
 
