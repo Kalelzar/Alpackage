@@ -287,8 +287,9 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
   if (payload->usedSSH) {
     const char* pubkey = nullptr;
 
+    // FIXME: Default key never gets used.
     if (payload->triedDefaultKey && payload->defaultKey != nullptr) {
-      printf ("Using default key: ");
+      Log::info ("Using default key: ");
       pubkey = conf.sshKey.c_str ( );
     } else {
       pubkey = (*payload->keys).path ( ).c_str ( );
@@ -299,9 +300,9 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
     FreeLater privKeyGuard ((void**) &privkey);
     strncpy (privkey, pubkey, n);
     privkey[n] = '\0';
-    printf ("Authenticated to '%s' with ssh key '%s'.\n",
-            remote.c_str ( ),
-            privkey);
+    Log::info ("Authenticated to '%s' with ssh key '%s'.\n",
+               remote.c_str ( ),
+               privkey);
   }
 
   TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
