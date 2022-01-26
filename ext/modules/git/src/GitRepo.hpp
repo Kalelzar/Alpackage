@@ -55,6 +55,11 @@ class GitRepo {
     MergeStatus (Kind status, git_oid* oid)
         : status (status)
         , oid ((git_oid*) malloc (sizeof (git_oid))) {
+      if (oid == nullptr) {
+        Log::error ("Failed to allocate block of size: ", sizeof (git_oid));
+        Log::flush ( );
+        exit (1);
+      }
       memcpy (this->oid, oid, sizeof (git_oid));
     }
 
@@ -62,6 +67,11 @@ class GitRepo {
       if (&other != this) {
         if (other.oid) {
           oid = (git_oid*) malloc (sizeof (git_oid));
+          if (oid == nullptr) {
+            Log::error ("Failed to allocate block of size: ", sizeof (git_oid));
+            Log::flush ( );
+            exit (1);
+          }
           memcpy (oid, other.oid, sizeof (git_oid));
         } else {
           oid = nullptr;
@@ -72,8 +82,19 @@ class GitRepo {
     MergeStatus& operator= (MergeStatus const& other) {
       if (&other != this) {
         status = other.status;
-        if (oid == nullptr) { oid = (git_oid*) malloc (sizeof (git_oid)); }
-        memcpy (oid, other.oid, sizeof (git_oid));
+        if (other.oid != nullptr) {
+          if (oid == nullptr) {
+            oid = (git_oid*) malloc (sizeof (git_oid));
+            if (oid == nullptr) {
+              // Oh no. We couldn't allocate memory!
+              Log::error ("Failed to allocate block of size: ",
+                          sizeof (git_oid));
+              Log::flush ( );
+              exit (1);
+            }
+          }
+          memcpy (oid, other.oid, sizeof (git_oid));
+        }
       }
       return *this;
     };
