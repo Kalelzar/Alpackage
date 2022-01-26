@@ -343,7 +343,8 @@ ErrorOr<GitRepo::AheadBehindResult> GitRepo::checkIfBehind ( ) {
 
   AheadBehindResult res{ };
 
-  res.mergeStatus = std::move (TRY (mergeStatus ( )));
+  res.mergeStatus  = std::move (TRY (mergeStatus ( )));
+  mergeStatusCache = res.mergeStatus;
   if (res.mergeStatus.status != MergeStatus::Kind::NONE)
     git_graph_ahead_behind (&res.ahead, &res.behind, repo, headId, fheadId);
   else {
@@ -390,6 +391,10 @@ ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
   if (!payload.status) {
     // HACK:??? Assume that a missing mergeable ref means we are up-to-date.
     return MergeStatus (MergeStatus::Kind::NONE);
+  }
+
+  if (mergeStatusCache.oid && git_oid_cmp (oid, mergeStatusCache.oid) == 0) {
+    return mergeStatusCache;
   }
 
   git_annotated_commit* commit = nullptr;

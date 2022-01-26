@@ -135,6 +135,8 @@ class GitRepo {
   ~GitRepo ( ) {
     if (repo) { git_repository_free (repo); }
   };
+  private:
+  MergeStatus mergeStatusCache{ };
 };
 
 bool             validate (GitRepo const&);
