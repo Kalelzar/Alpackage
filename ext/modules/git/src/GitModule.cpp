@@ -141,6 +141,12 @@ class GitModule : public IAlpackageModule {
     return ModuleError::UNIMPLEMENTED;
   }
   ModuleError install (std::string const& pkgName) override {
+    for (auto& t : pkgs) {
+      if (t.name == pkgName) {
+        if (t.fastForward ( ).isEmpty ( )) { return ModuleError::UNSUPPORTED; }
+        return ModuleError::NONE;
+      }
+    }
     return ModuleError::UNIMPLEMENTED;
   }
 
