@@ -25,6 +25,8 @@ ErrorOr<int> kalmain (int argc, char** argv) {
   std::cout << "Checking git packages status:" << std::endl
             << mkString (TRY (git->hasUpdates ( )), '\n', "", "\n");
 
+  git->install ("Alpackage");
+
   return 0;
 }
 
