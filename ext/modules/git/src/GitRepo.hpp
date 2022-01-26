@@ -131,6 +131,7 @@ class GitRepo {
   [[nodiscard]] ErrorOr<bool>              modified ( );
   [[nodiscard]] ErrorOr<AheadBehindResult> checkIfBehind ( );
   [[nodiscard]] ErrorOr<MergeStatus>       mergeStatus ( );
+  [[nodiscard]] ErrorOr<void>              fastForward ( );
 
   ~GitRepo ( ) {
     if (repo) { git_repository_free (repo); }

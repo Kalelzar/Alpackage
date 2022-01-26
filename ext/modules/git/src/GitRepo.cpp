@@ -9,9 +9,12 @@
 #include <git2.h>
 #include <git2/annotated_commit.h>
 #include <git2/blob.h>
+#include <git2/checkout.h>
 #include <git2/graph.h>
 #include <git2/merge.h>
+#include <git2/oid.h>
 #include <git2/remote.h>
+#include <git2/repository.h>
 #include <git2/revparse.h>
 #include <git2/status.h>
 #include <git2/types.h>
@@ -357,6 +360,40 @@ static int collectOIDFromFetchHead (const char*    ref_name,
     ((OIDPayload*) payload)->status = true;
   }
   return 0;
+}
+
+ErrorOr<void> GitRepo::fastForward ( ) {
+  auto ms = TRY (mergeStatus ( ));
+  if (ms.status != MergeStatus::Kind::FAST_FORWARD) {
+    return format ("Cannot fast-forward this repository");
+  }
+  git_reference* targetRef = nullptr;
+  int            error     = 0;
+  error                    = git_repository_head (&targetRef, repo);
+  TRY (handleGitError (error, "Failed to get repository head"));
+
+  git_object* target = nullptr;
+  error = git_object_lookup (&target, repo, ms.oid, GIT_OBJECT_COMMIT);
+  TRY (handleGitError (error,
+                       format ("Failed to look up commit object for OID '{}'",
+                               git_oid_tostr_s (ms.oid))));
+
+  git_checkout_options ffCheckoutOpts = GIT_CHECKOUT_OPTIONS_INIT;
+  ffCheckoutOpts.checkout_strategy    = GIT_CHECKOUT_SAFE;
+
+  error = git_checkout_tree (repo, target, &ffCheckoutOpts);
+  TRY (handleGitError (error, "Failed to checkout HEAD."));
+
+  git_reference* newRef = nullptr;
+  error
+    = git_reference_set_target (&newRef, targetRef, ms.oid, "FF via Alpackage");
+  TRY (handleGitError (error, "Failed to move HEAD reference"));
+
+  git_object_free (target);
+  git_reference_free (targetRef);
+  git_reference_free (newRef);
+
+  return { };
 }
 
 ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
