@@ -70,7 +70,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
     while (!in->eof ( ) && in->peek ( ) != std::char_traits<char>::eof ( )) {
       T e = TRY_WITH (T::read (in), error ( ));
       if (in->fail ( )) { return error ( ); }
-      res.push_back (e);
+      res.push_back (std::move (e));
     }
 
     return std::move (res);
@@ -83,7 +83,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
     if (result.isEmpty ( )) {
       return result.propagate (format ("Failed to parse file: '{}'", path));
     }
-    return result.get ( );
+    return std::move (result.get ( ));
   }
 };
 
@@ -114,7 +114,7 @@ template<IStreamable T, WithDefaultValue Container>
           *in >> e;
         } catch (std::runtime_error&) { return error ( ); }
         if (in->fail ( )) { return error ( ); }
-        res.push_back (e);
+        res.push_back (std::move (e));
       }
 
       return std::move (res);
@@ -127,6 +127,6 @@ template<IStreamable T, WithDefaultValue Container>
       if (result.isEmpty ( )) {
         return result.propagate (format ("Failed to parse file: '{}'", path));
       }
-      return result.get ( );
+      return std::move (result.get ( ));
     }
   };

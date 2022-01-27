@@ -104,6 +104,12 @@ template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
     return next;
   }
 
+  ErrorOr<T> propagate (std::string&& msg) {
+    ErrorOr<T> next (*this);
+    next.errors.push_front (std::forward<std::string> (msg));
+    return next;
+  }
+
   [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
   [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
 
@@ -169,6 +175,12 @@ template<> class ErrorOr<void> {
     return next;
   }
 
+  ErrorOr propagate (std::string&& msg) {
+    ErrorOr next (*this);
+    next.errors.push_front (std::forward<std::string> (msg));
+    return next;
+  }
+
   [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
   [[nodiscard]] inline bool isDefined ( ) const { return defined; }
 
@@ -228,6 +240,12 @@ template<> class ErrorOr<std::string> {
   ErrorOr<std::string> propagate (std::string const& msg) {
     ErrorOr<std::string> next (*this);
     next.errors.push_front (msg);
+    return next;
+  }
+
+  ErrorOr<std::string> propagate (std::string&& msg) {
+    ErrorOr next (*this);
+    next.errors.push_front (std::forward<std::string> (msg));
     return next;
   }
 

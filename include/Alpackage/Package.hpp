@@ -23,14 +23,23 @@ class Package {
   std::string pm;
   bool        installed;
 
-  Package (std::string name, std::string pm, bool installed)
-      : name (std::move (name))
-      , pm (std::move (pm))
+  Package (std::string const& name, std::string const& pm, bool installed)
+      : name (name)
+      , pm (pm)
       , installed (installed) { }
 
+  Package (Package const& other) = default;
+
+  Package (Package&& other) noexcept
+      : name (std::move (other.name))
+      , pm (std::move (other.pm))
+      , installed (other.installed) { }
+
   Package& operator= (Package const& other);
+  Package& operator= (Package&& other) noexcept;
 
   Package ( )      = delete;
+  ~Package ( )     = default;
 
   bool                 operator== (Package const& other) const;
 

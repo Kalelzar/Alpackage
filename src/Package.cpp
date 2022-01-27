@@ -11,6 +11,15 @@ Package& Package::operator= (Package const& other) {
   return *this;
 }
 
+Package& Package::operator= (Package&& other) noexcept {
+  if (&other != this) {
+    name      = std::move (other.name);
+    pm        = std::move (other.pm);
+    installed = other.installed;
+  }
+  return *this;
+}
+
 bool Package::operator== (Package const& other) const {
   return pm == other.pm && name == other.name;
 }
