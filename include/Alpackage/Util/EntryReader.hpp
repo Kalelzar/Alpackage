@@ -31,11 +31,11 @@ template<typename T, typename Container = std::vector<T>> class EntryReader {
     int                   status = 0;
     auto*                 realname
       = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
-    auto res = format ("Failed to read entry of type: {}", realname);
+    auto res = format ("Unsupported entry type: {}.", realname);
     free (realname);
     return res;
 #else
-    return format ("Failed to read entry of type: {}", typeid (Entry).name ( ));
+    return format ("Unsupported entry type: {}", typeid (Entry).name ( ));
 #endif
   }
   public:
