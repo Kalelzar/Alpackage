@@ -393,7 +393,7 @@ ErrorOr<void> GitRepo::fastForward ( ) {
   git_reference_free (targetRef);
   git_reference_free (newRef);
 
-  return { };
+  return installPkg ( );
 }
 
 ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
