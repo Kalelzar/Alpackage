@@ -1,7 +1,10 @@
 #pragma once
 
+#include <Kal/ErrorOr.hpp>
+#include <Kal/Format.hpp>
 #include <Kal/default.hpp>
 
+#include <cstring>
 #include <forward_list>
 #include <ostream>
 #include <set>
@@ -9,6 +12,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
 
 namespace Alpackage {
 
@@ -37,6 +41,8 @@ class Package {
         << "\" }";
     return out;
   }
+
+  static ErrorOr<Alpackage::Package> read (std::istream* in);
 };
 
 }     // namespace Alpackage
