@@ -33,7 +33,7 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
       module->init ( ),
       format ("Could not load {} from {}.", moduleName, prefix.string ( )));
 
-    if (result != ModuleError::NONE) {
+    if (!result) {
       return format ("Failed to initialize module: {}", moduleName);
     }
 

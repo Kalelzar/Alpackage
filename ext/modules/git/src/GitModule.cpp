@@ -36,7 +36,7 @@ class GitModule : public IAlpackageModule {
   };
   [[nodiscard]] constexpr const char* name ( ) const override { return "Git"; };
 
-  ErrorOr<ModuleError>                init ( ) override {
+  ErrorOr<bool>                       init ( ) override {
     Log::info ("Initializing module: %s", name ( ));
     git_libgit2_init ( );
     {
@@ -70,11 +70,13 @@ class GitModule : public IAlpackageModule {
       pkgs   = p;
     }
 
-    return ModuleError::NONE;
+    return true;
   };
 
-  [[nodiscard]] ModuleErrorOr<std::set<Package>> installed ( ) const override {
-    return ModuleError::UNIMPLEMENTED;
+  [[nodiscard]] ErrorOr<std::set<Package>> installed ( ) const override {
+    return format ("Package '{}-{}' doesn't support listing packages.",
+                   name ( ),
+                   version ( ));
   };
 
   [[nodiscard]] ErrorOr<std::set<std::string>> hasUpdates ( ) override {
@@ -132,22 +134,28 @@ class GitModule : public IAlpackageModule {
     return std::set<std::string> (res.begin ( ), res.end ( ));
   };
 
-  [[nodiscard]] ModuleErrorOr<std::set<Package>>
+  [[nodiscard]] ErrorOr<std::set<Package>>
     search (std::string const& query) const override {
-    return ModuleError::UNIMPLEMENTED;
+    return format ("Package '{}-{}' doesn't support search.",
+                   name ( ),
+                   version ( ));
   }
-  [[nodiscard]] ModuleErrorOr<Package>
+  [[nodiscard]] ErrorOr<Package>
     find (std::string const& pkgName) const override {
-    return ModuleError::UNIMPLEMENTED;
+    return format ("Package '{}-{}' doesn't support find.",
+                   name ( ),
+                   version ( ));
   }
-  ModuleError install (std::string const& pkgName) override {
+
+  [[nodiscard]] ErrorOr<bool> install (std::string const& pkgName) override {
     for (auto& t : pkgs) {
       if (t.name == pkgName) {
-        if (t.fastForward ( ).isEmpty ( )) { return ModuleError::UNSUPPORTED; }
-        return ModuleError::NONE;
+        if (t.fastForward ( ).isEmpty ( )) { return false; }
+        return true;
       }
     }
-    return ModuleError::UNIMPLEMENTED;
+    return format ("Cannot update package '{}'. No gpgk definition exists.",
+                   pkgName);
   }
 
 

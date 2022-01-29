@@ -32,7 +32,7 @@ class TextDbModule : public IAlpackageModule {
     return "TextDB";
   };
 
-  [[nodiscard]] ErrorOr<ModuleError> init ( ) override {
+  [[nodiscard]] ErrorOr<bool> init ( ) override {
     Log::info ("Initializing module: %s", name ( ));
     {
       reckless::scoped_indent indent;
@@ -44,27 +44,36 @@ class TextDbModule : public IAlpackageModule {
       Log::info ("Loading config from '%s'", confdir);
       pkgs = TRY (readConfig (confdir));
     }
-    return ModuleError::NONE;
+    return true;
   };
 
-  [[nodiscard]] ModuleErrorOr<std::set<Package>> installed ( ) const override {
+  [[nodiscard]] ErrorOr<std::set<Package>> installed ( ) const override {
     return pkgs;
   };
 
   [[nodiscard]] ErrorOr<std::set<std::string>> hasUpdates ( ) override {
-    return format ("Unsupported operation.");
+    return format ("Package '{}-{}' doesn't support checking for updates.",
+                   name ( ),
+                   version ( ));
   };
 
-  [[nodiscard]] ModuleErrorOr<std::set<Package>>
+  [[nodiscard]] ErrorOr<std::set<Package>>
     search (std::string const& query) const override {
-    return ModuleError::UNSUPPORTED;
+    return format ("Package '{}-{}' doesn't support searching packages.",
+                   name ( ),
+                   version ( ));
   }
-  [[nodiscard]] ModuleErrorOr<Package>
+  [[nodiscard]] ErrorOr<Package>
     find (std::string const& pkgName) const override {
-    return ModuleError::UNSUPPORTED;
+    return format ("Package '{}-{}' doesn't support finding packages.",
+                   name ( ),
+                   version ( ));
   }
-  [[nodiscard]] ModuleError install (std::string const& pkgName) override {
-    return ModuleError::UNSUPPORTED;
+  [[nodiscard]] ErrorOr<bool> install (std::string const& pkgName) override {
+    return format ("Package '{}-{}' doesn't support installing packages.",
+                   name ( ),
+                   version ( ));
+  }
   }
 };
 
