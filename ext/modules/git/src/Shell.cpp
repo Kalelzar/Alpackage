@@ -3,12 +3,12 @@
 #include <Kal/ErrorOr.hpp>
 #include <Kal/Format.hpp>
 
+#include <cerrno>
 #include <climits>
+#include <cstdio>
 #include <cstdlib>
-#include <errno.h>
 #include <filesystem>
 #include <git2.h>
-#include <stdio.h>
 #include <string>
 #include <sys/wait.h>
 #include <unistd.h>

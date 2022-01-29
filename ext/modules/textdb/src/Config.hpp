@@ -14,7 +14,7 @@ ErrorOr<std::vector<Alpackage::Package>> readConfig (std::istream* in) {
   return std::move (EntryReader<Alpackage::Package>::parse (in));
 }
 
-// FIX: This fails if there is a newline after the last entry in a file
+// FIXME: This fails if there is a newline after the last entry in a file
 ErrorOr<std::set<Alpackage::Package>> readConfig (std::string configPath) {
   std::ifstream file (configPath);
 
