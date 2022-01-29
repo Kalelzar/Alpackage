@@ -148,6 +148,12 @@ class GitModule : public IAlpackageModule {
   }
 
   [[nodiscard]] ErrorOr<bool> install (std::string const& pkgName) override {
+    return format ("Package '{}-{}' doesn't support installation.",
+                   name ( ),
+                   version ( ));
+  }
+
+  [[nodiscard]] ErrorOr<bool> update (std::string const& pkgName) override {
     for (auto& t : pkgs) {
       if (t.name == pkgName) {
         if (t.fastForward ( ).isEmpty ( )) { return false; }

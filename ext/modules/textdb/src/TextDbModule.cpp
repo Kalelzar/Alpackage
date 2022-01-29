@@ -74,6 +74,11 @@ class TextDbModule : public IAlpackageModule {
                    name ( ),
                    version ( ));
   }
+
+  [[nodiscard]] ErrorOr<bool> update (std::string const& pkgName) override {
+    return format ("Package '{}-{}' doesn't support installing packages.",
+                   name ( ),
+                   version ( ));
   }
 };
 

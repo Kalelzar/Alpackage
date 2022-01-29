@@ -40,8 +40,14 @@ class BOOST_SYMBOL_VISIBLE IAlpackageModule {
 
   [[nodiscard]] virtual ErrorOr<bool> install (std::string const& pkgName) = 0;
 
+  [[nodiscard]] virtual ErrorOr<bool> update (std::string const& pkg)      = 0;
+
   [[nodiscard]] virtual ErrorOr<bool> install (Package const& pkg) {
     return install (pkg.name);
+  }
+
+  [[nodiscard]] virtual ErrorOr<bool> update (Package const& pkg) {
+    return update (pkg.name);
   }
 
 
