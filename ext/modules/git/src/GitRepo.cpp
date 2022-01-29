@@ -323,11 +323,11 @@ ErrorOr<GitRepo::AheadBehindResult> GitRepo::checkIfBehind ( ) {
 
   AheadBehindResult res{ };
 
-  res.mergeStatus  = std::move (TRY (mergeStatus ( )));
-  mergeStatusCache = res.mergeStatus;
-  if (res.mergeStatus.status != MergeStatus::Kind::NONE)
+  mergeStatusCache = std::move (TRY (mergeStatus ( )));
+  res.mergeStatus  = mergeStatusCache.status;
+  if (res.mergeStatus != MergeStatus::Kind::NONE) {
     git_graph_ahead_behind (&res.ahead, &res.behind, repo, headId, fheadId);
-  else {
+  } else {
     res.ahead  = 0;
     res.behind = 0;
   };

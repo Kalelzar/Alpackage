@@ -107,19 +107,21 @@ class GitRepo {
     MergeStatus& operator= (MergeStatus&& other) noexcept {
       if (&other != this) {
         status = other.status;
-        if (oid) free (oid);
+        if (oid) { free (oid); }
         oid       = other.oid;
         other.oid = nullptr;
       }
       return *this;
     };
 
-    ~MergeStatus ( ) { free (oid); }
+    ~MergeStatus ( ) {
+      if (oid) { free (oid); }
+    }
   };
 
   struct AheadBehindResult {
-    size_t      ahead, behind;
-    MergeStatus mergeStatus;
+    size_t            ahead, behind;
+    MergeStatus::Kind mergeStatus;
   };
 
   [[nodiscard]] ErrorOr<void>              handleGitError (int                errcode,

@@ -84,9 +84,8 @@ class GitModule : public IAlpackageModule {
       auto status = c.checkIfBehind ( );
       if (status.isDefined ( )) {
         auto        aheadBehind = status.get ( );
-
         std::string mergeStatusString;
-        switch (aheadBehind.mergeStatus.status) {
+        switch (aheadBehind.mergeStatus) {
           case GitRepo::MergeStatus::Kind::FAST_FORWARD:
             mergeStatusString = "Can fast-forward.";
             break;
@@ -98,18 +97,20 @@ class GitModule : public IAlpackageModule {
             return format ("{}-{}: Invalid merge status.", c.name, c.version);
         }
 
-        if (aheadBehind.ahead == 0 && aheadBehind.behind == 0)
+        if (aheadBehind.ahead == 0 && aheadBehind.behind == 0) {
           return format ("{}-{}: Is up-to-date. {}",
                          c.name,
                          c.version,
                          mergeStatusString);
-        else if (aheadBehind.ahead == 0) {
+        }
+        if (aheadBehind.ahead == 0) {
           return format ("{}-{}: Is {} commits behind origin. {}",
                          c.name,
                          c.version,
                          aheadBehind.behind,
                          mergeStatusString);
-        } else if (aheadBehind.behind == 0) {
+        }
+        if (aheadBehind.behind == 0) {
           return format ("{}-{}: Is {} commits ahead of origin. {}",
                          c.name,
                          c.version,
