@@ -109,6 +109,7 @@ static int ask (char** out, const char* prompt, char optional) {
   return 0;
 }
 
+
 int cred_acquire_cb (git_credential** out,
                      const char*      url,
                      const char*      username_from_url,
@@ -272,6 +273,7 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
   git_fetch_options fopts     = GIT_FETCH_OPTIONS_INIT;
   fopts.callbacks.credentials = cred_acquire_cb;
   fopts.callbacks.payload     = malloc (sizeof (fetchPayload));
+  FreeLater payloadGuard (&fopts.callbacks.payload);
   new ((fetchPayload*) fopts.callbacks.payload) fetchPayload ( );
   ((fetchPayload*) fopts.callbacks.payload)->defaultKey = conf.sshKey.c_str ( );
   bool retry                                            = true;
@@ -284,14 +286,9 @@ ErrorOr<void> GitRepo::fetchOrigin ( ) {
     }
   }
 
-  auto*     payload = ((fetchPayload*) fopts.callbacks.payload);
-  FreeLater payloadGuard ((void**) &payload);
-
-
-  TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
-
+  ((fetchPayload*) fopts.callbacks.payload)->~fetchPayload ( );
   git_remote_free (gremote);
-
+  TRY (handleGitError (errcode, "Could not fetch remote 'origin'"));
   return { };
 };
 
@@ -341,7 +338,7 @@ ErrorOr<GitRepo::AheadBehindResult> GitRepo::checkIfBehind ( ) {
 
 namespace {
 struct OIDPayload {
-  git_oid* data;
+  git_oid* data   = nullptr;
   bool     status = false;
 };
 }     // namespace
@@ -397,8 +394,9 @@ ErrorOr<void> GitRepo::fastForward ( ) {
 }
 
 ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
-  int        error   = 0;
-  auto*      oid     = (git_oid*) malloc (sizeof (git_oid));
+  int        error = 0;
+  auto*      oid   = (git_oid*) malloc (sizeof (git_oid));
+  FreeLater  oidGuard ((void**) &oid);
   OIDPayload payload = {oid, false};
   error              = git_repository_fetchhead_foreach (repo,
                                             collectOIDFromFetchHead,
