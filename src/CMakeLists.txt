@@ -20,6 +20,6 @@ include_directories(${CMAKE_SOURCE_DIR}/lib/reckless/reckless/include)
 
 add_library(Alpackage SHARED ${ALL_SRC})
 target_include_directories(Alpackage PUBLIC ${Boost_INCLUDE_DIRS})
-target_link_libraries(Alpackage $<$<CONFIG:ASAN>:asan> $<$<CONFIG:Debug>:profiler> $<$<CONFIG:Debug>:tcmalloc> ${Boost_LIBRARIES} dl)
+target_link_libraries(Alpackage $<$<CONFIG:ASAN>:asan> ${Boost_LIBRARIES} dl)
 target_link_libraries(Alpackage reckless pthread)
 set_target_properties(Alpackage PROPERTIES LINKER_LANGUAGE CXX)
