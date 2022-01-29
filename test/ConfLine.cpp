@@ -9,8 +9,7 @@
 TEST (ConfLine, ValidConfLine) {
   std::stringstream ss ("name = value");
 
-  ConfLine          c;
-  ss >> c;
+  ConfLine          c = TRY_ASSERT (ConfLine::read (&ss));
 
   ASSERT_EQ ("name", c.name);
   ASSERT_EQ ("value", c.value);
