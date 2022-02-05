@@ -22,7 +22,7 @@ template<typename Tp, typename T = RemoveRef<Tp>> class Option {
   public:
   inline Option ( ) = default;
   Option (T&& value) : defined (true) { new (&t) T (std::forward<T> (value)); }
-  Option (T const& value) : defined (true) { new (&t) T (T (value)); }
+  Option (T const& value) : defined (true) { new (&t) T (value); }
 
   Option (Option const&) = default;
   inline Option (Option const& other) requires (!TriviallyConstructible<T>)
@@ -32,6 +32,21 @@ template<typename Tp, typename T = RemoveRef<Tp>> class Option {
 
   inline Option (Option&& other) noexcept : defined (other.defined) {
     if (other.isDefined ( )) { new (&t) T (other.give ( )); }
+  }
+
+
+  Option& operator= (T const& value) {
+    if (defined) { get ( ).~T ( ); }
+    defined = true;
+    new (&t) T (value);
+    return *this;
+  }
+
+  Option& operator= (T&& value) {
+    if (defined) { get ( ).~T ( ); }
+    defined = true;
+    new (&t) T (std::forward<T> (value));
+    return *this;
   }
 
   Option& operator= (Option const&) = delete;
