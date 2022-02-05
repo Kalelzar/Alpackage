@@ -32,6 +32,8 @@ set_target_properties(Alpackage_main PROPERTIES OUTPUT_NAME "alpkg")
 target_link_libraries(Alpackage_main PUBLIC Alpackage dl)
 #target_link_libraries(Alpackage_main PUBLIC reckless pthread)
 
+add_subdirectory(lib/rapidcheck)
+
 add_subdirectory(test)
 add_subdirectory(bench)
 
