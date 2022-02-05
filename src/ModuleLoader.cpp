@@ -5,6 +5,7 @@
 #include <Kal/Format.hpp>
 
 #include <boost/dll/import.hpp>
+#include <boost/dll/shared_library.hpp>
 
 namespace Alpackage::Module {
 
@@ -20,14 +21,27 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
 
 
   try {
+    boost::dll::shared_library lib (prefix / moduleName,
+                                    boost::dll::load_mode::append_decorations);
+
+    if (!lib.is_loaded ( )) {
+      return format ("Failed to load module: %s", moduleName);
+    }
+
+    if (!lib.has ("module")) {
+      return format (
+        "Invalid module: %s. Module doesn't expose a 'module' object.",
+        moduleName);
+    }
+
     boost::shared_ptr<Alpackage::Module::IAlpackageModule> module
       = boost::dll::import_symbol<Alpackage::Module::IAlpackageModule> (
-        prefix / moduleName,
-        "module",
-        boost::dll::load_mode::append_decorations);
+        lib,
+        "module");
+    if (!module) { return format ("Failed to import module: %s", moduleName); }
+    Log::info ("Successfully loaded: %s", moduleName);
 
-    if (!module) { return format ("Failed to load module: %s", moduleName); }
-
+    Log::flush ( );
 
     auto result = TRY_WITH (
       module->init ( ),
