@@ -1,7 +1,5 @@
 #pragma once
 
-#include <Alpackage/Util/Logging.hpp>
-
 #include <Kal/Concepts/detail/mkString.hpp>
 
 #include <Kal/ErrorOr.hpp>
@@ -33,9 +31,6 @@ ErrorOr<std::string>  XDG_CONFIG_HOME ( ) {
                "currently holds the relative path '{}'",
               env)};
   }
-  Log::warn ("'XDG_CONFIG_HOME' is not set. You should probably remedy that. "
-              "Using '%s' as a default.",
-             XDG_CONFIG_HOME_DEFAULT);
   return mkString (XDG_CONFIG_HOME_DEFAULT);
 }
 
@@ -50,9 +45,7 @@ ErrorOr<std::string>  XDG_DATA_HOME ( ) {
                "currently holds the relative path '{}'",
               env)};
   }
-  Log::warn ("'XDG_DATA_HOME' is not set. You should probably remedy that. "
-              "Using '%s' as a default.",
-             XDG_DATA_HOME_DEFAULT);
+
   return mkString (XDG_DATA_HOME_DEFAULT);
 }
 
@@ -67,9 +60,7 @@ ErrorOr<std::string>  XDG_CACHE_HOME ( ) {
                "currently holds the relative path '{}'",
               env)};
   }
-  Log::warn ("'XDG_CACHE_HOME' is not set. You should probably remedy that. "
-              "Using '%s' as a default.",
-             XDG_CACHE_HOME_DEFAULT);
+
   return mkString (XDG_CACHE_HOME_DEFAULT);
 }
 
@@ -84,9 +75,7 @@ ErrorOr<std::string>  XDG_STATE_HOME ( ) {
                "currently holds the relative path '{}'",
               env)};
   }
-  Log::warn ("'XDG_STATE_HOME' is not set. You should probably remedy that. "
-              "Using '%s' as a default.",
-             XDG_STATE_HOME_DEFAULT);
+
   return mkString (XDG_STATE_HOME_DEFAULT);
 }
 
@@ -101,9 +90,6 @@ ErrorOr<std::string>  XDG_RUNTIME_DIR ( ) {
                "currently holds the relative path '{}'",
               env)};
   }
-  Log::warn ("'XDG_RUNTIME_DIR' is not set. You REALLY should remedy that. "
-              "Using '%s' as a default.",
-             XDG_RUNTIME_DIR_DEFAULT);
   return mkString (XDG_RUNTIME_DIR_DEFAULT);
 }
 
@@ -130,9 +116,7 @@ ErrorOr<std::string>  XDG_EXEC_HOME ( ) {
               env),
     };
   }
-  Log::info ("'XDG_EXEC_HOME' is not set. You don't really need to set it. "
-              "Using '%s' as a default.",
-             XDG_EXEC_HOME_DEFAULT);
+
   return mkString (XDG_EXEC_HOME_DEFAULT);
 }
 
@@ -144,9 +128,6 @@ ErrorOr<std::vector<std::string>> XDG_DATA_DIRS ( ) {
   if ((env = getenv ("XDG_DATA_DIRS")) != nullptr && strlen (env) > 0) {
     paths = env;
   } else {
-    Log::info ("'XDG_DATA_DIRS' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_DATA_DIRS_DEFAULT);
     paths = XDG_DATA_DIRS_DEFAULT;
   }
 
@@ -160,11 +141,7 @@ ErrorOr<std::vector<std::string>> XDG_DATA_DIRS ( ) {
 
   while (getline (ss, item, ':')) {
     std::filesystem::path path (item);
-    if (path.is_absolute ( )) {
-      result.push_back (item);
-    } else {
-      Log::warn ("Path '%s' in XDG_DATA_DIRS is not absolute. Ignoring.", item);
-    }
+    if (path.is_absolute ( )) { result.push_back (item); }
   }
 
   return result;
@@ -176,9 +153,6 @@ ErrorOr<std::vector<std::string>> XDG_CONFIG_DIRS ( ) {
   if ((env = getenv ("XDG_CONFIG_DIRS")) != nullptr && strlen (env) > 0) {
     paths = env;
   } else {
-    Log::info ("'XDG_CONFIG_DIRS' is not set. You should probably remedy that. "
-               "Using '%s' as a default.",
-               XDG_CONFIG_DIRS_DEFAULT);
     paths = XDG_CONFIG_DIRS_DEFAULT;
   }
 
@@ -192,12 +166,7 @@ ErrorOr<std::vector<std::string>> XDG_CONFIG_DIRS ( ) {
 
   while (getline (ss, item, ':')) {
     std::filesystem::path path (item);
-    if (path.is_absolute ( )) {
-      result.push_back (item);
-    } else {
-      Log::warn ("Path '%s' in XDG_CONFIG_DIRS is not absolute. Ignoring.",
-                 item);
-    }
+    if (path.is_absolute ( )) { result.push_back (item); }
   }
 
   return result;

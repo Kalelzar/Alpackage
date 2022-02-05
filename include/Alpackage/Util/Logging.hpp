@@ -105,13 +105,13 @@ class CategorizedSeverityLog : public reckless::basic_log {
 
 class Log {
   private:
+  static const std::string log_path;
   static Log
     l;     // NOLINT(cppcoreguidelines-avoid-non-const-global-variables):
            // Needs to call vendor non-const code
   Log ( )
-      : filewriter (LOGNAME ".log")
+      : filewriter (log_path.c_str ( ))
       , filelog (&filewriter)
-      , errwriter ( )
       , errlog (&errwriter) { }
 
   using log_t = detail::CategorizedSeverityLog<reckless::indent<2>,
@@ -157,3 +157,5 @@ class Log {
     l.errlog.error (LOGNAME, fmt, arg...);
   }
 };
+
+#undef LOGNAME
