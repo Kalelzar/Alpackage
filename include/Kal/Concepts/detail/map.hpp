@@ -26,7 +26,7 @@ template<typename U, typename T, template<typename> class C>
 
 template<typename U, typename T, template<typename> class C>
   requires Iterable<C<T>> && Insertable<C, U> C<U>
-    map (C<T> collection, Transformer<T, U> auto transformer) {
+    map (C<T>& collection, Transformer<T, U> auto transformer) {
     C<U> newCollection = defaultValue<C<U>>;
     for (const T& it : collection) { newCollection.insert (transformer (it)); }
 

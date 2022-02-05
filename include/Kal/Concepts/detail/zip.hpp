@@ -21,7 +21,9 @@ template<typename L,
     R> && IterableWith<Result<std::pair<L, R>>,
                        std::pair<L, R>> && Appendable<Result, std::pair<L, R>>
     Result<std::pair<L, R>> zip (Left<L> const& l, Right<R> const& r) {
-    auto                    ret = defaultValue<Result<std::pair<L, R>>>;
+    auto ret = defaultValue<Result<std::pair<L, R>>>;
+
+    if (l.size ( ) == 0 || r.size ( ) == 0) return ret;
 
     decltype (l.cbegin ( )) li;
     decltype (r.cbegin ( )) ri;

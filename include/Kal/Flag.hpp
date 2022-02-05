@@ -191,7 +191,8 @@ template<template<typename, typename...> class C = std::vector> class Flag {
         }
       } break;
       case String: {
-        assert (false && "Unimplemented");
+        C<char*>& f = *(C<char*>*) v->flagv;
+        f.push_back (str);
       } break;
       default: return format ("Cannot read a value of unsupported type", str);
     }
