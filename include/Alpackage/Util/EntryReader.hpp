@@ -3,9 +3,11 @@
 #include <Alpackage/Util/Logging.hpp>
 
 #include <Kal/Concepts/Stream.hpp>
+#include <Kal/Concepts/Type.hpp>
 
 #include <Kal/ErrorOr.hpp>
 #include <Kal/Format.hpp>
+#include <Kal/Symbol.hpp>
 #include <Kal/default.hpp>
 
 #include <fstream>
@@ -26,18 +28,9 @@ concept Entry = requires (std::istream* u) {
 template<typename T, typename Container = std::vector<T>> class EntryReader {
   private:
   static inline std::string error ( ) {
-#ifdef __GNUC__
-    const std::type_info& ti     = typeid (T);
-    int                   status = 0;
-    auto*                 realname
-      = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
-    auto res = format ("Unsupported entry type: {}.", realname);
-    free (realname);
-    return res;
-#else
-    return format ("Unsupported entry type: {}", typeid (Entry).name ( ));
-#endif
+    return format ("Unsupported entry type: {}", symbolicate<T> ( ));
   }
+
   public:
   [[nodiscard]] static ErrorOr<Container> parse (std::istream* in) {
     return error ( );
@@ -51,18 +44,9 @@ template<typename T, typename Container = std::vector<T>> class EntryReader {
 template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
   private:
   static inline std::string error ( ) {
-#ifdef __GNUC__
-    const std::type_info& ti     = typeid (T);
-    int                   status = 0;
-    auto*                 realname
-      = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
-    auto res = format ("Failed to read entry of type: {}", realname);
-    free (realname);
-    return res;
-#else
-    return format ("Failed to read entry of type: {}", typeid (Entry).name ( ));
-#endif
+    return format ("Unsupported entry type: {}.", symbolicate<T> ( ));
   }
+
   public:
   [[nodiscard]] static ErrorOr<Container> parse (std::istream* in) {
     auto res = defaultValue<Container>;
@@ -72,6 +56,10 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
       if (in->fail ( )) { return error ( ); }
       res.push_back (std::move (e));
     }
+
+    Log::info (
+      "%s",
+      format ("Read {} entries of type {}", res.size ( ), symbolicate<T> ( )));
 
     return std::move (res);
   }
@@ -92,17 +80,7 @@ template<IStreamable T, WithDefaultValue Container>
   requires WithDefaultValue<T> &&(!Entry<T>) class EntryReader<T, Container> {
     private:
     static ErrorOr<int> error ( ) {
-#ifdef __GNUC__
-      const std::type_info& ti     = typeid (T);
-      int                   status = 0;
-      auto*                 realname
-        = abi::__cxa_demangle (ti.name ( ), nullptr, nullptr, &status);
-      auto res = format ("Failed to read entry of type: {}", realname);
-      free (realname);
-      return res;
-#else
-      return format ("Failed to read entry of type: {}", typeid (T).name ( ));
-#endif
+      return format ("Unsupported entry type: {}", symbolicate<T> ( ));
     }
     public:
     [[nodiscard]] static ErrorOr<Container> parse (std::istream* in) {
@@ -116,6 +94,11 @@ template<IStreamable T, WithDefaultValue Container>
         if (in->fail ( )) { return error ( ); }
         res.push_back (std::move (e));
       }
+
+      Log::info ("%s",
+                 format ("Read {} entries of type {}.",
+                         res.size ( ),
+                         symbolicate<T> ( )));
 
       return std::move (res);
     }
