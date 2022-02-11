@@ -72,26 +72,3 @@ debugCoverage: build
 
 debugInstall: debugBuild
 	sudo cmake --install build/ninja --config Debug --prefix /usr
-
-# Address Sanitizer
-
-ASANBuild: ${PWD}/build/ninja format
-	cmake --build build/ninja -j 4 --config ASAN
-
-ASAN: ASANBuild
-	./build/ninja/ASAN/alpkg
-
-ASANTest: ASANBuild
-	ctest -j 4 --test-dir build/ninja --output-on-failure -C ASAN
-
-ASANRetest: ASANBuild
-	ctest -j 4 --rerun-failed --test-dir build/ninja --output-on-failure -C ASAN
-
-ASANBench: ASANBuild
-	valgrind -s ./build/ninja/bench/ASAN/$(PROJECT_NAME)_bench
-
-ASANCoverage: build
-	cmake --build build/ninja -j 4 --config ASAN --target TestCoverage
-
-ASANInstall: ASANBuild
-	sudo cmake --install build/ninja --config ASAN --prefix /usr
