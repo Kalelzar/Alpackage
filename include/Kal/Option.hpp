@@ -71,8 +71,8 @@ template<typename Tp, typename T = RemoveRef<Tp>> class Option {
   }
 
   [[nodiscard]] inline T getOrElse (T&& def) && {
-    if (isDefined ( )) { return std::move (get ( )); }
-    return std::move (def);
+    if (isDefined ( )) { return get ( ); }
+    return def;
   }
 
   [[nodiscard]] inline          operator bool ( ) const { return defined; }

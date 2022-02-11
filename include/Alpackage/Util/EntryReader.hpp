@@ -61,7 +61,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
       "%s",
       format ("Read {} entries of type {}", res.size ( ), symbolicate<T> ( )));
 
-    return std::move (res);
+    return res;
   }
 
   static ErrorOr<Container> parse (const std::string& path) {
@@ -71,7 +71,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
     if (result.isEmpty ( )) {
       return result.propagate (format ("Failed to parse file: '{}'", path));
     }
-    return std::move (result.get ( ));
+    return result.get ( );
   }
 };
 
@@ -100,7 +100,7 @@ template<IStreamable T, WithDefaultValue Container>
                          res.size ( ),
                          symbolicate<T> ( )));
 
-      return std::move (res);
+      return res;
     }
 
     static ErrorOr<Container> parse (const std::string& path) {
@@ -110,6 +110,6 @@ template<IStreamable T, WithDefaultValue Container>
       if (result.isEmpty ( )) {
         return result.propagate (format ("Failed to parse file: '{}'", path));
       }
-      return std::move (result.get ( ));
+      return result.get ( );
     }
   };

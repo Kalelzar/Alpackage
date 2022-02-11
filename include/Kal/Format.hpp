@@ -11,7 +11,7 @@ template<typename... T> struct FormatArglist;
 template<> struct FormatArglist<> {
   static std::vector<std::string> format ( ) {
     std::vector<std::string> v = defaultValue<std::vector<std::string>>;
-    return std::move (v);
+    return v;
   }
 
   static std::vector<std::string> formatOnto (std::vector<std::string>& v) {

@@ -26,5 +26,5 @@ ErrorOr<std::vector<T>> mapDirectoryFiles (
     }
   }
 
-  return std::move (res);
+  return res;
 }

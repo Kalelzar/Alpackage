@@ -83,7 +83,7 @@ ErrorOr<Package> Package::read (std::istream* in) {
     description[read - mark] = '\0';
   }
 
-  return std::move (Package (name, pkgmanager, true));
+  return Package (name, pkgmanager, true);
 }
 
 }     // namespace Alpackage

@@ -25,7 +25,7 @@ template<typename T, template<typename> class C>
       if (!skip) newCollection.push_back (it);
       continue;
     }
-    return std::move (newCollection);
+    return newCollection;
   }
 
 
@@ -42,5 +42,5 @@ template<typename T, template<typename> class C>
 next:
       continue;
     }
-    return std::move (newCollection);
+    return newCollection;
   }

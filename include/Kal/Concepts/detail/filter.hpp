@@ -17,7 +17,7 @@ template<typename T, template<typename> class C>
       if (predicate (it)) { newCollection.push_back (it); }
     }
 
-    return std::move (newCollection);
+    return newCollection;
   }
 
 template<typename T, template<typename> class C>
@@ -28,7 +28,7 @@ template<typename T, template<typename> class C>
       if (predicate (it)) { newCollection.insert (it); }
     }
 
-    return std::move (newCollection);
+    return newCollection;
   }
 
 template<typename T, template<typename> class C>
@@ -40,7 +40,7 @@ template<typename T, template<typename> class C>
     if (predicate (collection[i])) { newCollection.push_back (collection[i]); }
   }
 
-  return std::move (newCollection);
+  return newCollection;
 }
 
 template<typename T>
@@ -65,5 +65,5 @@ template<typename T, template<typename> class C>
 
     newCollection.reverse ( );
 
-    return std::move (newCollection);
+    return newCollection;
   }

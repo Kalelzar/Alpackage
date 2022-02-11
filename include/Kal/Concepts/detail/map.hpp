@@ -20,7 +20,7 @@ template<typename U, typename T, template<typename> class C>
     C<U> newCollection = defaultValue<C<U>>;
     for (T& it : collection) { newCollection.push_back (transformer (it)); }
 
-    return std::move (newCollection);
+    return newCollection;
   }
 
 

@@ -21,8 +21,9 @@ template<Iterable    T,
     if (std::next (it) != end (t)) s << delim;
   }
   s << after;
-  return std::move (s.str ( ));
+  return s.str ( );
 }
+
 
 template<ConstIterable T,
          OStreamable   Delim,
@@ -42,7 +43,7 @@ inline std::string mkString (T const&      t,
   }
   for (; it != cend (t); ++it) { s << delim << *it; }
   s << after;
-  return std::move (s.str ( ));
+  return s.str ( );
 }
 
 template<AnyIterable T>
