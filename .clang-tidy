@@ -249,7 +249,7 @@ CheckOptions:
   - key:             cppcoreguidelines-explicit-virtual-functions.AllowOverrideAndFinal
     value:           'false'
   - key:             hicpp-braces-around-statements.ShortStatementLines
-    value:           '0'
+    value:           '1'
   - key:             readability-redundant-smartptr-get.IgnoreMacros
     value:           'true'
   - key:             readability-identifier-naming.AggressiveDependentMemberLookup
@@ -347,7 +347,7 @@ CheckOptions:
   - key:             bugprone-argument-comment.CommentBoolLiterals
     value:           '0'
   - key:             readability-braces-around-statements.ShortStatementLines
-    value:           '0'
+    value:           '1'
   - key:             bugprone-argument-comment.CommentUserDefinedLiterals
     value:           '0'
   - key:             hicpp-use-emplace.ContainersWithPushBack
@@ -359,7 +359,7 @@ CheckOptions:
   - key:             performance-inefficient-string-concatenation.StrictMode
     value:           'false'
   - key:             readability-implicit-bool-conversion.AllowPointerConditions
-    value:           'false'
+    value:           'true'
   - key:             readability-redundant-declaration.IgnoreMacros
     value:           'true'
   - key:             modernize-make-unique.MakeSmartPtrFunction
