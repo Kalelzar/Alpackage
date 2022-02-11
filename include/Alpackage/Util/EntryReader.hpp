@@ -10,6 +10,7 @@
 #include <Kal/Symbol.hpp>
 #include <Kal/default.hpp>
 
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -36,6 +37,7 @@ template<typename T, typename Container = std::vector<T>> class EntryReader {
     return error ( );
   }
 
+
   static ErrorOr<Container> parse (const std::string& path) {
     return error ( );
   }
@@ -56,7 +58,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
       if (in->fail ( )) { return error ( ); }
       res.push_back (std::move (e));
     }
-
+    reckless::scoped_indent indent;
     Log::info (
       "%s",
       format ("Read {} entries of type {}", res.size ( ), symbolicate<T> ( )));
@@ -79,7 +81,7 @@ template<Entry T, WithDefaultValue Container> class EntryReader<T, Container> {
 template<IStreamable T, WithDefaultValue Container>
   requires WithDefaultValue<T> &&(!Entry<T>) class EntryReader<T, Container> {
     private:
-    static ErrorOr<int> error ( ) {
+    static inline std::string error ( ) {
       return format ("Unsupported entry type: {}", symbolicate<T> ( ));
     }
     public:
@@ -95,6 +97,7 @@ template<IStreamable T, WithDefaultValue Container>
         res.push_back (std::move (e));
       }
 
+      reckless::scoped_indent indent;
       Log::info ("%s",
                  format ("Read {} entries of type {}.",
                          res.size ( ),

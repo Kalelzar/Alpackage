@@ -17,6 +17,7 @@
 
 #define KAL_UNHANDLED_ERROR 255
 
+
 ErrorOr<int> kalmain (int argc, char** argv) {
   auto textdb
     = TRY (Alpackage::Module::ModuleLoader::getModule ("AlpackageTextDB"));
@@ -26,6 +27,12 @@ ErrorOr<int> kalmain (int argc, char** argv) {
             << mkString (TRY (git->hasUpdates ( )), '\n', "", "\n");
 
   TRY (git->update ("Alpackage"));
+
+  // TRY (textdb->consume (
+  //   TRY (Kal::Action::ActionFactory::the ( ).make ("list", "textdb", { }))));
+  // TRY (textdb->consume (
+  //   TRY (Kal::Action::ActionFactory::the ( ).make ("install", "textdb", {
+  //   }))));
 
   return 0;
 }
