@@ -33,6 +33,10 @@ target_link_libraries(Alpackage_main PUBLIC Alpackage dl)
 #target_link_libraries(Alpackage_main PUBLIC reckless pthread)
 
 add_subdirectory(lib/rapidcheck)
+include_directories(${CMAKE_SOURCE_DIR/lib/rapidcheck/include})
+
+add_subdirectory(lib/hayai)
+include_directories(${CMAKE_SOURCE_DIR/lib/hayai/include})
 
 add_subdirectory(test)
 add_subdirectory(bench)
