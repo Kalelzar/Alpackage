@@ -129,7 +129,7 @@ class GitModule : public IAlpackageModule {
         "Encountered error while checking '{}-{}': \n\tCaused by: {}",
         c.name,
         c.version,
-        mkString (status.getErrors ( ), "\n\tCaused by: ", "", ""));
+        status.getErrors ( ));
     });
 
     return std::set<std::string> (res.begin ( ), res.end ( ));

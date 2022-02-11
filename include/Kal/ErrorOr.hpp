@@ -3,6 +3,7 @@
 #include <Kal/Concepts/Stream.hpp>
 #include <Kal/Concepts/detail/mkString.hpp>
 
+#include "Kal/StringBuilder.hpp"
 #include <Kal/Option.hpp>
 #include <Kal/default.hpp>
 
@@ -47,38 +48,40 @@
  */
 template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
   private:
-  Option<T>                      t;
-  std::forward_list<std::string> errors;
+  Option<T>     t;
+  StringBuilder errors;
   public:
   ErrorOr (Option<T> const& other) : t (other) {
-    if (other.isEmpty ( )) {
-      errors.push_front ("Constructed from empty option.");
-    }
+    if (other.isEmpty ( )) { errors.putr ("Constructed from empty option."); }
   };
 
   ErrorOr (Option<T>&& other) : t (std::forward<Option<T>> (other)) {
-    if (t.isEmpty ( )) { errors.push_front ("Constructed from empty option."); }
+    if (t.isEmpty ( )) { errors.putr ("Constructed from empty option."); }
   };
 
   template<typename U>
     requires (!Same<T, U>)
   ErrorOr (Option<U> const& other) : t (other) {
     if (t.isDefined ( )) {
-      errors.push_front (
+      errors.putr (
         "Attempt to propagate an ErrorOr with value of different type");
     }
   }
 
-  ErrorOr (ErrorOr const& other) : t (other.t), errors (other.errors) { }
+  ErrorOr (ErrorOr const& other)
+      : t (other.t)
+      , errors (other.errors.get ( )) { }
   ErrorOr (ErrorOr&& other) noexcept
       : t (std::move (other.t))
       , errors (std::move (other.errors)){ };
 
   template<typename U>
     requires (!Same<T, U>)
-  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )), t ( ) {
+  ErrorOr (ErrorOr<U> const& other)
+      : errors (other.getErrors ( ), true)
+      , t ( ) {
     if (t.isDefined ( )) {
-      errors.push_front (
+      errors.putr (
         "Attempt to propagate an ErrorOr with value of different type");
     }
   }
@@ -86,36 +89,33 @@ template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
   ErrorOr& operator= (ErrorOr const&) = delete;
   ErrorOr& operator= (ErrorOr&&) = delete;
 
-  ErrorOr (std::string const& errorMsg) : t ( ) {
-    errors.push_front (errorMsg);
-  }
+  ErrorOr (std::string const& errorMsg) : t ( ), errors (errorMsg, true) { }
 
 
-  ErrorOr (std::string&& errorMsg) : t ( ) {
-    errors.push_front (std::forward<std::string> (errorMsg));
-  }
+  ErrorOr (std::string&& errorMsg)
+      : t ( )
+      , errors (std::forward<std::string> (errorMsg), true) { }
 
   ErrorOr (T const& t) : t (t) { }
   ErrorOr (T&& t) : t (std::move (t)) { }
 
-  ErrorOr<T> propagate (std::string const& msg) {
-    ErrorOr<T> next (*this);
-    next.errors.push_front (msg);
-    return next;
+  inline ErrorOr<T> propagate (std::string const& msg) {
+    errors.putrf ("{}\n\tCaused by: ", msg);
+    return *this;
   }
 
-  ErrorOr<T> propagate (std::string&& msg) {
-    ErrorOr<T> next (*this);
-    next.errors.push_front (std::forward<std::string> (msg));
-    return next;
+  inline ErrorOr<T> propagate (std::string&& msg) {
+    errors.putrf ("{}\n\tCaused by: ", std::forward<std::string> (msg));
+    return *this;
   }
 
   [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
   [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
 
-  [[nodiscard]] std::forward_list<std::string> const& getErrors ( ) const {
-    return errors;
+  [[nodiscard]] inline std::string getErrors ( ) const {
+    return errors.getr ( );
   }
+
 
   inline T getOrElse (T def) const {
     if (isDefined ( )) { return t.get ( ); }
@@ -138,21 +138,21 @@ template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
  */
 template<> class ErrorOr<void> {
   private:
-  bool                           defined{false};
-  std::forward_list<std::string> errors;
+  bool          defined{false};
+  StringBuilder errors;
   public:
   ErrorOr (ErrorOr const& other)
       : defined (other.defined)
-      , errors (other.errors) { }
+      , errors (other.errors.get ( )) { }
   ErrorOr (ErrorOr&& other) noexcept
       : defined (other.defined)
       , errors (std::move (other.errors)){ };
 
   template<typename U>
     requires (!Same<void, U>)
-  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )) {
+  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( ), true) {
     if (other.isDefined ( )) {
-      errors.push_front (
+      errors.putr (
         "Attempt to propagate an ErrorOr with value of different type");
     }
   }
@@ -160,33 +160,29 @@ template<> class ErrorOr<void> {
   ErrorOr& operator= (ErrorOr const&) = delete;
   ErrorOr& operator= (ErrorOr&&) = delete;
 
-  ErrorOr (std::string const& errorMsg) { errors.push_front (errorMsg); }
+  ErrorOr (std::string const& errorMsg) : errors (errorMsg, true) { }
 
 
-  ErrorOr (std::string&& errorMsg) {
-    errors.push_front (std::forward<std::string> (errorMsg));
-  }
+  ErrorOr (std::string&& errorMsg)
+      : errors (std::forward<std::string> (errorMsg), true) { }
 
   ErrorOr ( ) : defined (true) { }
 
-  ErrorOr propagate (std::string const& msg) {
-    ErrorOr next (*this);
-    next.errors.push_front (msg);
-    return next;
+  inline ErrorOr propagate (std::string const& msg) {
+    errors.putrf ("{}\n\tCaused by: ", msg);
+    return *this;
   }
 
-  ErrorOr propagate (std::string&& msg) {
-    ErrorOr next (*this);
-    next.errors.push_front (std::forward<std::string> (msg));
-    return next;
+  inline ErrorOr propagate (std::string&& msg) {
+    errors.putrf ("{}\n\tCaused by: ", std::forward<std::string> (msg));
+    return *this;
   }
 
-  [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
-  [[nodiscard]] inline bool isDefined ( ) const { return defined; }
+  [[nodiscard]] inline bool        isEmpty ( ) const { return !isDefined ( ); }
+  [[nodiscard]] inline bool        isDefined ( ) const { return defined; }
 
-  [[nodiscard]] inline std::forward_list<std::string> const&
-    getErrors ( ) const {
-    return errors;
+  [[nodiscard]] inline std::string getErrors ( ) const {
+    return errors.getr ( );
   }
 
   inline void get ( ) { }
@@ -207,10 +203,12 @@ struct ErrorMsg {
  */
 template<> class ErrorOr<std::string> {
   private:
-  Option<std::string>            t;
-  std::forward_list<std::string> errors;
+  Option<std::string> t;
+  StringBuilder       errors;
   public:
-  ErrorOr (ErrorOr const& other) = default;
+  ErrorOr (ErrorOr const& other)
+      : t (other.t)
+      , errors (other.errors.get ( )){ };
   ErrorOr (ErrorOr&& other) noexcept
       : t (std::move (other.t))
       , errors (std::move (other.errors)){ };
@@ -218,9 +216,9 @@ template<> class ErrorOr<std::string> {
 
   template<typename U>
     requires (!Same<std::string, U>)
-  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( )) {
-    if (t.isDefined ( )) {
-      errors.push_front (
+  ErrorOr (ErrorOr<U> const& other) : errors (other.getErrors ( ), true) {
+    if (other.isDefined ( )) {
+      errors.putr (
         "Attempt to propagate an ErrorOr with value of different type");
     }
   }
@@ -228,32 +226,28 @@ template<> class ErrorOr<std::string> {
   ErrorOr& operator= (ErrorOr const&) = delete;
   ErrorOr& operator= (ErrorOr&&) = delete;
 
-  ErrorOr (ErrorMsg const& errorMsg) { errors.push_front (errorMsg.data); }
+  ErrorOr (ErrorMsg const& errorMsg) : errors (errorMsg.data, true) { }
 
 
-  ErrorOr (ErrorMsg&& errorMsg) {
-    errors.push_front (std::move (errorMsg.data));
-  }
+  ErrorOr (ErrorMsg&& errorMsg) : errors (errorMsg.data, true) { }
 
   ErrorOr (std::string&& t) : t (std::move (t)) { }
 
-  ErrorOr<std::string> propagate (std::string const& msg) {
-    ErrorOr<std::string> next (*this);
-    next.errors.push_front (msg);
-    return next;
+  inline ErrorOr<std::string> propagate (std::string const& msg) {
+    errors.putrf ("{}\n\tCaused by: ", msg);
+    return *this;
   }
 
-  ErrorOr<std::string> propagate (std::string&& msg) {
-    ErrorOr next (*this);
-    next.errors.push_front (std::forward<std::string> (msg));
-    return next;
+  inline ErrorOr<std::string> propagate (std::string&& msg) {
+    errors.putrf ("{}\n\tCaused by: ", std::forward<std::string> (msg));
+    return *this;
   }
 
   [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
   [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
 
-  [[nodiscard]] std::forward_list<std::string> const& getErrors ( ) const {
-    return errors;
+  [[nodiscard]] inline std::string getErrors ( ) const {
+    return errors.getr ( );
   }
 
   [[nodiscard]] inline std::string getOrElse (std::string def) const {
@@ -268,19 +262,20 @@ template<> class ErrorOr<std::string> {
     exit (1);     // Unrecoverable.
   }
 
-  std::ostream& operator<< (std::ostream& out) {
+  std::ostream& operator<< (std::ostream& out) const {
     if (isDefined ( )) {
       out << "<void>";
     } else {
-      bool front = true;
-      for (auto it : getErrors ( )) {
-        if (front) {
-          out << "Error: " << it << std::endl;
-          front = false;
-        } else {
-          out << "\tCaused by: " << it << std::endl;
-        }
-      }
+      // bool front = true;
+      // for (auto it : instance.getErrors ( )) {
+      //   if (front) {
+      //     out << "Error: " << it << std::endl;
+      //     front = false;
+      //   } else {
+      //     out << "\tCaused by: " << it << std::endl;
+      //   }
+      // }
+      out << "Error: " << getErrors ( );
     }
     return out;
   }
@@ -294,15 +289,16 @@ std::ostream& operator<< (std::ostream& out, ErrorOr<T> const& instance) {
   if (instance.isDefined ( )) {
     out << mkString (instance.get ( ));
   } else {
-    bool front = true;
-    for (auto it : instance.getErrors ( )) {
-      if (front) {
-        out << "Error: " << it << std::endl;
-        front = false;
-      } else {
-        out << "\tCaused by: " << it << std::endl;
-      }
-    }
+    // bool front = true;
+    // for (auto it : instance.getErrors ( )) {
+    //   if (front) {
+    //     out << "Error: " << it << std::endl;
+    //     front = false;
+    //   } else {
+    //     out << "\tCaused by: " << it << std::endl;
+    //   }
+    // }
+    out << "Error: " << instance.getErrors ( );
   }
   return out;
 }
