@@ -4,22 +4,30 @@
 
 namespace Kal::Action {
 
-ErrorOr<uint32_t> ActionFactory::reserve (std::string const& name) {
-  auto res = storage.has (name.c_str ( ));
-  if (res.isDefined ( )) { return res.get ( ); }
 
-  return TRY_WITH (storage.add (idCounter++, name.c_str ( )),
-                   format ("Failed to reserve an ID for action '{}'", name));
-}
-
-ErrorOr<Action> ActionFactory::make (std::string const& name,
-                                     std::string const& provider,
-                                     std::vector<ActionArgument> const& args) {
-  auto id = TRY (reserve (name));
-  return Action{name, provider, args, id};
-}
-
-uint32_t      ActionFactory::idCounter = 0;
 ActionFactory ActionFactory::instance;
+
+std::string   ActionArgument::toString ( ) const {
+  bool isList = (type & ALIST) != 0U;
+
+  switch ((uint8_t) (type | ALIST) ^ ALIST) {
+    case ASTRING:
+      return format ("{}: {}", name, isList ? "[String]" : "String");
+    case ABOOLEAN:
+      return format ("{}: {}", name, isList ? "[Boolean]" : "Boolean");
+    case AINT: return format ("{}: {}", name, isList ? "[Int]" : "Int");
+    case ADOUBLE:
+      return format ("{}: {}", name, isList ? "[Double]" : "Double");
+    default: return format ("{}: <{}>", name, (uint16_t) type);
+  }
+}
+
+std::string Action::toString ( ) const {
+  return format ("[{}] {}::{}({})",
+                 id,
+                 provider,
+                 name,
+                 mkString (args, ", ", "", ""));
+}
 
 }     // namespace Kal::Action

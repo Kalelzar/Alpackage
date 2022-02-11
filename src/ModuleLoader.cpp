@@ -21,6 +21,7 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
 
 
   try {
+    reckless::scoped_indent    indent;
     boost::dll::shared_library lib (prefix / moduleName,
                                     boost::dll::load_mode::append_decorations);
 
@@ -39,7 +40,7 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
         lib,
         "module");
     if (!module) { return format ("Failed to import module: %s", moduleName); }
-    Log::info ("Successfully loaded: %s", moduleName);
+    Log::info ("Import: success");
 
     Log::flush ( );
 
@@ -51,18 +52,21 @@ ErrorOr<ModulePtr> ModuleLoader::load (std::string const&          moduleName,
       return format ("Failed to initialize module: {}", moduleName);
     }
 
-    Log::info ("Successfully initialized: %s", moduleName);
+    Log::info ("Init: success");
+
 
     Log::debug ("Module %s v%s", module->name ( ), module->version ( ));
-    {
-      reckless::scoped_indent indent;
-      Log::debug ("Install: %s", module->canInstall ( ) ? "yes" : "no");
-      Log::debug ("Search: %s", module->canSearch ( ) ? "yes" : "no");
-      Log::debug ("Find: %s", module->canFind ( ) ? "yes" : "no");
-      Log::debug ("List: %s", module->canList ( ) ? "yes" : "no");
 
-      return module;
+    auto actions = TRY (module->provides ( ));
+    Log::info ("Actions: ");
+    for (auto& action : actions) {
+      reckless::scoped_indent indent;
+      Log::info ("%s", action.toString ( ));
     }
+
+    Log::info ("Successfully loaded: %s", moduleName);
+    return module;
+
   } catch (boost::system::system_error& e) {
     return format ("Exception caught (boost::system::system_error) : {}",
                    e.what ( ));

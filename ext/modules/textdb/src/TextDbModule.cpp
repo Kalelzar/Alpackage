@@ -2,6 +2,7 @@
 #include <Alpackage/Package.hpp>
 #include <Alpackage/Util/Logging.hpp>
 
+#include "Kal/Action.hpp"
 #include <Kal/XDGBaseDir.hpp>
 
 #include <boost/config.hpp>
@@ -17,7 +18,43 @@ namespace Alpackage::Module {
 class TextDbModule : public IAlpackageModule {
 
   private:
-  std::set<Package> pkgs;
+  std::set<Package>                pkgs;
+  std::vector<Kal::Action::Action> actions;
+
+  protected:
+  [[nodiscard]] ErrorOr<std::vector<Kal::Action::Action>>
+    generateProvideList ( ) override {
+#define MAKE_ACTION(NAME, ...)                                                 \
+  TRY (Kal::Action::ActionFactory::the ( ).make (                              \
+    NAME,                                                                      \
+    "textdb",                                                                  \
+    std::vector<Kal::Action::ActionArgument> __VA_ARGS__))
+    return std::vector<Kal::Action::Action>{MAKE_ACTION ("name", { }),
+                                            MAKE_ACTION ("version", { }),
+                                            MAKE_ACTION ("list", { })};
+#undef MAKE_ACTION
+  }
+
+  [[nodiscard]] ErrorOr<void>
+    dispatch (Kal::Action::Action const& action) override {
+#define DISPATCH_ACTION(NAME, ...)                                             \
+  if (action.id == Kal::Action::ActionFactory::the ( ).reserve (NAME)) {       \
+    __VA_ARGS__                                                                \
+  } else
+    DISPATCH_ACTION ("version", Log::info ("Dispatch `version'");)
+    DISPATCH_ACTION ("name", Log::info ("Dispatch `name'");)
+    DISPATCH_ACTION ("list", Log::info ("Dispatch `list'");) {
+      return format ("Cannot dispatch '{}'. Operation not supported", action);
+    }
+    return { };
+#undef DISPATCH_ACTION
+  }
+
+  public:
+  [[nodiscard]] ErrorOr<std::vector<Kal::Action::Action>>
+    provides ( ) const override {
+    return actions;
+  };
 
   public:
   [[nodiscard]] constexpr bool canSearch ( ) const override { return false; }
@@ -32,12 +69,14 @@ class TextDbModule : public IAlpackageModule {
     return "TextDB";
   };
 
+
   [[nodiscard]] ErrorOr<bool> init ( ) override {
     Log::info ("Initializing module: %s", name ( ));
     {
       reckless::scoped_indent indent;
-      auto                    configdirs = TRY (XDG_CONFIG_DIRS ( ));
-      auto                    confdir
+      actions         = TRY (generateProvideList ( ));
+      auto configdirs = TRY (XDG_CONFIG_DIRS ( ));
+      auto confdir
         = TRY_OR_ELSE (findFirstFile (configdirs, "alpackage/textdb.scsv"),
                        {"textdb.scsv"});
 

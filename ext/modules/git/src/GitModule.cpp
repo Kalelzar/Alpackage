@@ -7,6 +7,7 @@
 
 #include <Kal/Concepts/Applicators.hpp>
 
+#include "Kal/Action.hpp"
 #include <Kal/XDGBaseDir.hpp>
 
 #include <boost/config.hpp>
@@ -23,9 +24,52 @@
 namespace Alpackage::Module {
 
 class GitModule : public IAlpackageModule {
-  std::vector<GitRepo> pkgs;
+  std::vector<GitRepo>             pkgs;
+  std::vector<Kal::Action::Action> actions;
+  protected:
+  [[nodiscard]] ErrorOr<std::vector<Kal::Action::Action>>
+    generateProvideList ( ) override {
+    using Kal::Action::ALIST;
+    using Kal::Action::ASTRING;
+#define MAKE_ACTION(NAME, ...)                                                 \
+  TRY (Kal::Action::ActionFactory::the ( ).make (                              \
+    NAME,                                                                      \
+    "git",                                                                     \
+    std::vector<Kal::Action::ActionArgument> __VA_ARGS__))
+    std::vector<Kal::Action::Action> actions{
+      MAKE_ACTION ("install", {{"packageNames", ALIST | ASTRING}}),
+      MAKE_ACTION ("version", { }),
+      MAKE_ACTION ("name", { }),
+      MAKE_ACTION ("list", { }),
+    };
+    return actions;
+
+#undef MAKE_ACTION
+  };
+
+  [[nodiscard]] ErrorOr<void>
+    dispatch (Kal::Action::Action const& action) override {
+#define DISPATCH_ACTION(NAME, ...)                                             \
+  if (action.id == Kal::Action::ActionFactory::the ( ).reserve (NAME)) {       \
+    __VA_ARGS__                                                                \
+  } else
+    DISPATCH_ACTION ("install", Log::info ("Dispatch `install'.");)
+    DISPATCH_ACTION ("version", Log::info ("Dispatch `version'");)
+    DISPATCH_ACTION ("name", Log::info ("Dispatch `name'");)
+    DISPATCH_ACTION ("list", Log::info ("Dispatch `list'");) {
+      return format ("Cannot dispatch '{}'. Operation not supported", action);
+    }
+    return { };
+#undef DISPATCH_ACTION
+  }
 
   public:
+  [[nodiscard]] ErrorOr<std::vector<Kal::Action::Action>>
+    provides ( ) const override {
+    return actions;
+  };
+
+
   [[nodiscard]] constexpr bool canSearch ( ) const override { return true; }
   [[nodiscard]] constexpr bool canFind ( ) const override { return true; }
   [[nodiscard]] constexpr bool canInstall ( ) const override { return true; }
@@ -40,6 +84,7 @@ class GitModule : public IAlpackageModule {
     Log::info ("Initializing module: %s", name ( ));
     git_libgit2_init ( );
     {
+      actions = TRY (generateProvideList ( ));
       reckless::scoped_indent indent;
 
       Log::info ("Loading config from $XDG_CONFIG_HOME/alpackage/git.conf");

@@ -11,6 +11,8 @@ class IActionProvider {
   [[nodiscard]] virtual ErrorOr<std::vector<Action>> generateProvideList ( )
     = 0;
   public:
+  // FIXME: Could this return an error?
+  //        Should we return a const& to the vector instead?
   [[nodiscard]] virtual ErrorOr<std::vector<Action>> provides ( ) const = 0;
 };
 
