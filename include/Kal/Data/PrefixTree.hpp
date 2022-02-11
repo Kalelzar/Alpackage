@@ -4,6 +4,7 @@
 #include <Kal/ErrorOr.hpp>
 #include <Kal/Format.hpp>
 
+#include <cassert>
 #include <cstddef>
 #include <cstring>
 
@@ -123,7 +124,7 @@ template<typename T> class PrefixTree {
       if (n == 0) { return value; }
 
       for (size_t i = 0; i < childrenCount; i++) {
-        if (children[i]->matcher == tail[0]) {
+        if (children[i] && children[i]->matcher == tail[0]) {
           return children[i]->has (tail + 1, n - 1);
         }
       }
@@ -147,6 +148,59 @@ template<typename T> class PrefixTree {
     Option<T> get ( ) { return value; }
 
     explicit Node (char next) : matcher (next) { }
+
+    Node (Node const& other)
+        : matcher (other.next)
+        , childrenCount (other.childrenCount) {
+      if (&other != this) {
+        capacity = other.childrenCount;
+        children = calloc (childrenCount, sizeof (T));
+        if (children) {
+          memcpy (children, other.children, other.childrenCount);
+        } else
+          assert (false);
+      }
+    }
+
+    Node& operator= (Node const& other) {
+      if (&other != this) {
+        matcher       = other.next;
+        childrenCount = other.childrenCount;
+        capacity      = other.childrenCount;
+        children      = calloc (childrenCount, sizeof (T));
+        if (children) {
+          memcpy (children, other.children, other.childrenCount);
+        } else
+          assert (false);
+      }
+      return *this;
+    }
+
+    Node (Node&& other) noexcept
+        : matcher (other.next)
+        , childrenCount (other.childrenCount)
+        , capacity (other.capacity)
+        , children (other.children) {
+      if (&other != this) {
+        other.children      = nullptr;
+        other.childrenCount = 0;
+        other.capacity      = 0;
+      }
+    }
+
+    Node& operator= (Node&& other) noexcept {
+      if (&other != this) {
+        matcher             = other.next;
+        childrenCount       = other.childrenCount;
+        capacity            = other.capacity;
+        children            = other.children;
+        other.children      = nullptr;
+        other.childrenCount = 0;
+        other.capacity      = 0;
+      }
+      return *this;
+    }
+
 
     Node ( )  = delete;
 
@@ -177,6 +231,8 @@ template<typename T> class PrefixTree {
     }
     new (root) Node ('\0');
   }
+
+  // FIXME: Implement copy/move constructors and operators
 
   ErrorOr<std::string> toString ( ) { return root->toString ( ); }
 
