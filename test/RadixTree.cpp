@@ -138,3 +138,27 @@ RC_GTEST_PROP (RadixTree, MoveOperator, (std::string s, int data)) {
   RC_ASSERT (res2.isDefined ( ));
   RC_ASSERT (res2 == -data);
 }
+
+
+RC_GTEST_PROP (RadixTree,
+               RemovingANodeHoldingUpAPrefixMergesTheNodeWithItsChild,
+               (std::string s1, std::string s2)) {
+  RC_PRE (s1.size ( ) >= 1 && s2.size ( ) >= 1);
+  Kal::Data::RadixTree<int> tree;
+  std::string               actualS2 = s1 + s2;
+  TRY_RC_ASSERT (tree.add (s1, 1));
+  TRY_RC_ASSERT (tree.add (actualS2, 2));
+  auto res1 = tree.lookup (s1);
+  RC_ASSERT (res1.isDefined ( ));
+  RC_ASSERT (res1 == 1);
+  auto res2 = tree.lookup (actualS2);
+  RC_ASSERT (res2.isDefined ( ));
+  RC_ASSERT (res2 == 2);
+  TRY_RC_ASSERT (tree.remove (s1));
+
+  auto res3 = tree.lookup (s1);
+  RC_ASSERT (res3.isEmpty ( ));
+  auto res4 = tree.lookup (actualS2);
+  RC_ASSERT (res4.isDefined ( ));
+  RC_ASSERT (res4 == 2);
+}
