@@ -238,8 +238,12 @@ template<typename T> class PrefixTree {
 
   ErrorOr<T>           get (const char* lookup) { return root->get (lookup); }
   Option<T>            has (const char* lookup) { return root->has (lookup); }
+  void                 clear ( ) {
+    root->free ( );
+    new (root) Node ('\0');
+  }
 
-  ErrorOr<T>           add (T const& value, const char* lookup) {
+  ErrorOr<T> add (T const& value, const char* lookup) {
     return TRY (root->add (value, lookup))->get ( );
   }
 
