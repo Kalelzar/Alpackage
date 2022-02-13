@@ -3,8 +3,9 @@
 #include <Kal/Concepts/Stream.hpp>
 #include <Kal/Concepts/detail/mkString.hpp>
 
-#include "Kal/StringBuilder.hpp"
 #include <Kal/Option.hpp>
+#include <Kal/StringBuilder.hpp>
+#include <Kal/Variant.hpp>
 #include <Kal/default.hpp>
 
 #include <forward_list>
@@ -48,84 +49,117 @@
  */
 template<typename Tp, typename T = RemoveRef<Tp>> class ErrorOr {
   private:
-  Option<T>     t;
-  StringBuilder errors;
+  Variant<T, StringBuilder> state;
+
   public:
-  ErrorOr (Option<T> const& other) : t (other) {
-    if (other.isEmpty ( )) { errors.putr ("Constructed from empty option."); }
+  ErrorOr (Option<T> const& other) {
+    if (other.isEmpty ( )) {
+      state = StringBuilder ("Constructed from empty option.", true);
+    } else {
+      state = other.get ( );
+    }
   };
 
-  ErrorOr (Option<T>&& other) : t (std::forward<Option<T>> (other)) {
-    if (t.isEmpty ( )) { errors.putr ("Constructed from empty option."); }
+  ErrorOr (Option<T>&& other) {
+    if (other.isEmpty ( )) {
+      state = StringBuilder ("Constructed from empty option.", true);
+    } else {
+      state = other.give ( );
+    }
   };
 
   template<typename U>
     requires (!Same<T, U>)
-  ErrorOr (Option<U> const& other) : t (other) {
-    if (t.isDefined ( )) {
-      errors.putr (
-        "Attempt to propagate an ErrorOr with value of different type");
+  ErrorOr (Option<U> const& other) {
+    if (other.isDefined ( )) {
+      state = StringBuilder (
+        "Attempt to propagate an ErrorOr with value of different type",
+        true);
+    } else {
+      state = StringBuilder ( );
     }
   }
 
-  ErrorOr (ErrorOr const& other)
-      : t (other.t)
-      , errors (other.errors.get ( )) { }
-  ErrorOr (ErrorOr&& other) noexcept
-      : t (std::move (other.t))
-      , errors (std::move (other.errors)){ };
+  ErrorOr (ErrorOr const& other) : state (other.state) { }
+  ErrorOr (ErrorOr&& other) noexcept : state (std::move (other.state)){ };
 
   template<typename U>
     requires (!Same<T, U>)
-  ErrorOr (ErrorOr<U> const& other)
-      : errors (other.getErrors ( ), true)
-      , t ( ) {
-    if (t.isDefined ( )) {
-      errors.putr (
-        "Attempt to propagate an ErrorOr with value of different type");
+  ErrorOr (ErrorOr<U> const& other) {
+    if (other.isDefined ( )) {
+      state = StringBuilder (
+        "Attempt to propagate an ErrorOr with value of different type",
+        true);
+    } else {
+      state = StringBuilder (other.getErrors ( ), true);
     }
   }
 
   ErrorOr& operator= (ErrorOr const&) = delete;
   ErrorOr& operator= (ErrorOr&&) = delete;
 
-  ErrorOr (std::string const& errorMsg) : t ( ), errors (errorMsg, true) { }
+  ErrorOr (std::string const& errorMsg)
+      : state (StringBuilder (errorMsg, true)) { }
 
 
-  ErrorOr (std::string&& errorMsg)
-      : t ( )
-      , errors (std::forward<std::string> (errorMsg), true) { }
+  ErrorOr (std::string&& errorMsg) : state (StringBuilder (errorMsg, true)) { }
 
-  ErrorOr (T const& t) : t (t) { }
-  ErrorOr (T&& t) : t (std::move (t)) { }
+  ErrorOr (T const& t) : state (t) { }
+  ErrorOr (T&& t) : state (std::move (t)) { }
 
   inline ErrorOr<T> propagate (std::string const& msg) {
-    errors.putrf ("{}\n\tCaused by: ", msg);
+    if (state.template is<StringBuilder> ( )) {
+      state.template get<StringBuilder> ( ).putrf ("{}\n\tCaused by: ", msg);
+    } else if (state.template is<T> ( )) {
+      return format ("Attempt to propagate '{}' a non-error instance", msg);
+    } else {
+      state = StringBuilder (msg, true);
+    }
     return *this;
   }
 
   inline ErrorOr<T> propagate (std::string&& msg) {
-    errors.putrf ("{}\n\tCaused by: ", std::forward<std::string> (msg));
+    if (state.template is<StringBuilder> ( )) {
+      state.template get<StringBuilder> ( ).putrf (
+        "{}\n\tCaused by: ",
+        std::forward<std::string> (msg));
+    } else if (state.template is<T> ( )) {
+      return format ("Attempt to propagate '{}' a non-error instance",
+                     std::forward<std::string> (msg));
+    } else {
+      state = StringBuilder (std::forward<std::string> (msg), true);
+    }
     return *this;
   }
 
   [[nodiscard]] inline bool isEmpty ( ) const { return !isDefined ( ); }
-  [[nodiscard]] inline bool isDefined ( ) const { return t.isDefined ( ); }
+  [[nodiscard]] inline bool isDefined ( ) const {
+    return state.template is<T> ( );
+  }
 
   [[nodiscard]] inline std::string getErrors ( ) const {
-    return errors.getr ( );
+    if (state.template is<StringBuilder> ( )) {
+      return state.template get<StringBuilder> ( ).getr ( );
+    } else if (state.template is<T> ( )) {
+      throw UnrecoverableError ("Attempt to output errors for an instance of "
+                                "ErrorOr<{}> that is defined.",
+                                symbolicate<T> ( ));
+    } else {
+      return "Accessed a completely undefined ErrorOr instance. This should "
+             "never happen.";
+    }
   }
 
 
   inline T getOrElse (T def) const {
-    if (isDefined ( )) { return t.get ( ); }
+    if (state.template is<T> ( )) { return state.template get<T> ( ); }
     return def;
   }
 
-  inline   operator bool ( ) const { return t.isDefined ( ); }
+  inline   operator bool ( ) const { return isDefined ( ); }
 
   inline T get ( ) const {
-    if (isDefined ( )) { return t.get ( ); }
+    if (state.template is<T> ( )) { return state.template get<T> ( ); }
     exit (1);     // Unrecoverable.
   }
 
