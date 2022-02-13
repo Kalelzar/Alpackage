@@ -202,7 +202,15 @@ class GitModule : public IAlpackageModule {
   [[nodiscard]] ErrorOr<bool> update (std::string const& pkgName) override {
     for (auto& t : pkgs) {
       if (t.name == pkgName) {
-        if (t.fastForward ( ).isEmpty ( )) { return false; }
+        auto prev = TRY (t.fastForward ( ));
+
+        auto res  = t.installPkg ( );
+        if (res.isEmpty ( )) {
+          Log::warn ("Error: %s", res.getErrors ( ));
+          // TODO: Revert fast-forward
+          TRY (t.checkOut (&prev, "Revert failed update."));
+          return false;
+        }
         return true;
       }
     }

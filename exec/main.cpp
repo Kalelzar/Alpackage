@@ -26,7 +26,9 @@ ErrorOr<int> kalmain (int argc, char** argv) {
   std::cout << "Checking git packages status:" << std::endl
             << mkString (TRY (git->hasUpdates ( )), '\n', "", "\n");
 
-  TRY (git->update ("Alpackage"));
+  auto res = TRY (git->update ("Alpackage"));
+
+  if (!res) Log::warn ("Update failed.");
 
   // TRY (textdb->consume (
   //   TRY (Kal::Action::ActionFactory::the ( ).make ("list", "textdb", { }))));

@@ -233,7 +233,8 @@ int cred_acquire_cb (git_credential** out,
 ErrorOr<void> GitRepo::buildPkg ( ) {
   if (!repo) { TRY (setUpRepo ( )); }
   if (build.empty ( )) { return { }; }
-  return executeShellCommand (build, dir);
+  TRY (executeShellCommand (build, dir));
+  return { };
 }
 
 ErrorOr<void> GitRepo::installPkg ( ) {
@@ -244,7 +245,8 @@ ErrorOr<void> GitRepo::installPkg ( ) {
                    name,
                    version);
   }
-  return executeShellCommand (install, dir);
+  TRY (executeShellCommand (install, dir));
+  return { };
 }
 
 ErrorOr<void> GitRepo::setUpRepo ( ) {
