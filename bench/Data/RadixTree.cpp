@@ -82,9 +82,9 @@ BENCHMARK_F (RadixTreeFPre, LookUp50000, 10, 50000) {
 }
 
 BENCHMARK_F (RadixTreeFPre, Remove100, 10, 100) {
-  tree.remove (strings[index++]);
+  assert (tree.remove (strings[index++]).isDefined ( ));
 }
 
-BENCHMARK_F (RadixTreeFPre, Remove50000, 1, 10000) {
+BENCHMARK_F (RadixTreeFPre, Remove50000, 10, 50000) {
   tree.remove (strings[index++]);
 }
