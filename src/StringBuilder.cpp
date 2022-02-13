@@ -37,6 +37,30 @@ StringBuilder& StringBuilder::operator= (StringBuilder&& other) noexcept {
   return *this;
 }
 
+StringBuilder::StringBuilder (StringBuilder const& other)
+    : bufferCapacity (other.bufferCapacity)
+    , bufferSize (other.bufferSize) {
+  if (&other == this) return;
+  if (buffer) { free (buffer); }
+  if (other.buffer) {
+    buffer = strdup (other.buffer);
+  } else
+    buffer = nullptr;
+}
+
+StringBuilder& StringBuilder::operator= (StringBuilder const& other) {
+  if (&other != this) {
+    if (buffer) free (buffer);
+    if (other.buffer) {
+      buffer = strdup (other.buffer);
+    } else
+      buffer = nullptr;
+    bufferCapacity = other.bufferCapacity;
+    bufferSize     = other.bufferSize;
+  }
+  return *this;
+}
+
 void StringBuilder::expand ( ) {
   if (bufferCapacity == 0) {
     if (buffer)
@@ -63,11 +87,11 @@ void StringBuilder::putr (const char* str) { putr (str, strlen (str)); }
 void StringBuilder::put (const char* str, size_t size) {
   if (size == 0 || !str) return;
   while (!buffer || size + bufferSize >= bufferCapacity - 1) {
-    // FIXME: This can be improved by ca0lculating a suitable capacity
+    // FIXME: This can be improved by calculating a suitable capacity
     //        and only expanding once to that.
     expand ( );
   }
-  std::cout.flush ( );
+
 
   strncpy (buffer + bufferSize, str, size);
   buffer[bufferSize + size] = '\0';
@@ -98,9 +122,17 @@ void StringBuilder::putr (std::string const& str) {
   putr (str.c_str ( ), str.size ( ));
 }
 
-std::string StringBuilder::get ( ) const { return {buffer}; }
+std::string StringBuilder::get ( ) const {
+  if (buffer)
+    return {buffer};
+  else
+    return "";
+}
 std::string StringBuilder::getr ( ) const {
   // NOTE: This is far from ideal but it is what it is.
-  std::string buf (buffer);
-  return {buf.rbegin ( ), buf.rend ( )};
+  if (buffer) {
+    std::string buf (buffer);
+    return {buf.rbegin ( ), buf.rend ( )};
+  } else
+    return "";
 }
