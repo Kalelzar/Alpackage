@@ -93,6 +93,9 @@ template<typename T> class RadixTree {
             if (res && !child.data && child.children.size ( ) == 0) {
               children.erase (children.begin ( ) + i);
             }
+            if (child.data && !data && children.size ( ) == 1) {
+              consolidate ( );
+            }
             return res;
           }
         }
@@ -179,9 +182,7 @@ template<typename T> class RadixTree {
             child.addSubstring (t, i);
           }
 
-          if (i == prefixLength - 1) {
-            return child.add (s + i + 1, t);
-          }
+          if (i == prefixLength - 1) { return child.add (s + i + 1, t); }
         }
 
         if (i != 0) { return child.breakUpAt (i, s, t); }
@@ -309,9 +310,7 @@ template<typename T> class RadixTree {
       return { };
     }
 
-    Option<T> remove (const char* s) {
-      return remove (s, strlen (s));
-    }
+    Option<T> remove (const char* s) { return remove (s, strlen (s)); }
   };
 
 
@@ -329,7 +328,6 @@ template<typename T> class RadixTree {
   ErrorOr<T> remove (std::string const& s) {
     if (!contains (s)) return format ("Key '{}' not in tree.", s);
     auto res = root.remove (s.c_str ( ));
-    if (res.isDefined ( )) root.consolidate ( );
     return res;
   }
 
@@ -348,7 +346,6 @@ template<typename T> class RadixTree {
   ErrorOr<T> remove (const char* s) {
     if (!contains (s)) return format ("Key '{}' not in tree.", s);
     auto res = root.remove (s);
-    if (res.isDefined ( )) root.consolidate ( );
     return res;
   }
 
