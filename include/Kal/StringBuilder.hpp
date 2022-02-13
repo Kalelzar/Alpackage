@@ -24,9 +24,9 @@ class StringBuilder {
   }
   ~StringBuilder ( );
   StringBuilder (StringBuilder&&) noexcept;
-  StringBuilder& operator              = (StringBuilder&&) noexcept;
-  StringBuilder (StringBuilder const&) = delete;
-  StringBuilder& operator= (StringBuilder const&) = delete;
+  StringBuilder& operator= (StringBuilder&&) noexcept;
+  StringBuilder (StringBuilder const&);
+  StringBuilder& operator= (StringBuilder const&);
 
 
   void           put (const char*);
