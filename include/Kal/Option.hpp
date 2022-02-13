@@ -1,8 +1,9 @@
 #pragma once
 
 #include <Kal/Concepts/Stream.hpp>
-//#include <Kal/Concepts/TypeConversion.hpp>
 
+#include <Kal/Symbol.hpp>
+#include <Kal/UnrecoverableError.hpp>
 #include <Kal/default.hpp>
 
 #include <ostream>
@@ -93,7 +94,11 @@ template<typename Tp, typename T = RemoveRef<Tp>> class Option {
 
   [[nodiscard]] inline T get ( ) && {
     if (isDefined ( )) { return give ( ); }
-    exit (4);     // Unrecoverable
+    throw UnrecoverableError (
+      "({}:{}:)Trying to move 'Option<{}>' but it is not defined.",
+      __FILE__,
+      __LINE__,
+      symbolicate<T> ( ));
   }
 
   [[nodiscard]] inline T give ( ) requires (MoveConstructible<T>) {
