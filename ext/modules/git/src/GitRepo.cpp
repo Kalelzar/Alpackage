@@ -359,21 +359,23 @@ static int collectOIDFromFetchHead (const char*    ref_name,
   return 0;
 }
 
-ErrorOr<void> GitRepo::fastForward ( ) {
-  auto ms = TRY (mergeStatus ( ));
-  if (ms.status != MergeStatus::Kind::FAST_FORWARD) {
-    return format ("Cannot fast-forward this repository");
-  }
+ErrorOr<git_oid> GitRepo::checkOut (git_oid* object, const char* reflogMsg) {
+  int     error = 0;
+
+
+  git_oid previous{ };
+  error = git_reference_name_to_id (&previous, repo, "HEAD");
+  TRY (handleGitError (error, "Failed to look up HEAD."));
+
   git_reference* targetRef = nullptr;
-  int            error     = 0;
   error                    = git_repository_head (&targetRef, repo);
   TRY (handleGitError (error, "Failed to get repository head"));
 
   git_object* target = nullptr;
-  error = git_object_lookup (&target, repo, ms.oid, GIT_OBJECT_COMMIT);
+  error = git_object_lookup (&target, repo, object, GIT_OBJECT_COMMIT);
   TRY (handleGitError (error,
                        format ("Failed to look up commit object for OID '{}'",
-                               git_oid_tostr_s (ms.oid))));
+                               git_oid_tostr_s (object))));
 
   git_checkout_options ffCheckoutOpts = GIT_CHECKOUT_OPTIONS_INIT;
   ffCheckoutOpts.checkout_strategy    = GIT_CHECKOUT_SAFE;
@@ -382,15 +384,23 @@ ErrorOr<void> GitRepo::fastForward ( ) {
   TRY (handleGitError (error, "Failed to checkout HEAD."));
 
   git_reference* newRef = nullptr;
-  error
-    = git_reference_set_target (&newRef, targetRef, ms.oid, "FF via Alpackage");
+  error = git_reference_set_target (&newRef, targetRef, object, reflogMsg);
   TRY (handleGitError (error, "Failed to move HEAD reference"));
 
   git_object_free (target);
   git_reference_free (targetRef);
   git_reference_free (newRef);
 
-  return installPkg ( );
+  return previous;
+}
+
+ErrorOr<git_oid> GitRepo::fastForward ( ) {
+  auto ms = TRY (mergeStatus ( ));
+  if (ms.status != MergeStatus::Kind::FAST_FORWARD) {
+    return format ("Cannot fast-forward this repository");
+  }
+
+  return TRY (checkOut (ms.oid, "FF via Alpackage"));
 }
 
 ErrorOr<GitRepo::MergeStatus> GitRepo::mergeStatus ( ) {
